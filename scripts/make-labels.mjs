@@ -11,6 +11,7 @@ import bwipjs from 'bwip-js'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { BRAND_COLORS as C, markSvg } from '../src/brand/mark.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const load = (f) => JSON.parse(readFileSync(join(root, 'src/data', f), 'utf8'))
@@ -38,6 +39,7 @@ export const packPayload = (gtin, p) => `(01)${gtin}(17)${p.expiry}(10)${p.batch
 export const hajjPayload = (id) => `HAJJ:${id}`
 
 const isoExpiry = (yymmdd) => `20${yymmdd.slice(0, 2)}-${yymmdd.slice(2, 4)}-${yymmdd.slice(4, 6)}`
+const logo = markSvg({ mark: C.blue, pulse: C.pulse, dot: C.dot })
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
 function wristband(p) {
@@ -53,7 +55,7 @@ function wristband(p) {
       <span>${esc(p.ward)}</span>
       ${allergy}
     </div>
-    <div class="band-logo">MEDGUARD<br><small>مستشفى تجريبي</small></div>
+    <div class="band-logo">${logo}<span>MEDGUARD</span><small>مستشفى تجريبي</small></div>
   </div>`
 }
 
@@ -120,7 +122,9 @@ const html = `<!doctype html>
   .band-code { width: 52mm; }
   .band-info { flex: 1; display: flex; flex-direction: column; line-height: 1.35; }
   .band-info b { font-size: 11pt; }
-  .band-logo { font-weight: 700; color: #0B5FA5; font-size: 9pt; text-align: center; line-height: 1.2; }
+  .band-logo { display: flex; flex-direction: column; align-items: center; font-weight: 700; color: ${C.blue}; font-size: 9pt; line-height: 1.2; }
+  .band-logo svg { width: 10mm; margin-bottom: .5mm; }
+  .band-logo small { font-weight: 400; color: #5B6675; font-size: 6.5pt; }
 
   /* Hajj card: ID-1 size (credit card). */
   .cards { display: flex; gap: 6mm; flex-wrap: wrap; }

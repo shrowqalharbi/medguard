@@ -36,6 +36,13 @@ export default {
         renal: status('renal'),
         interaction: status('interaction'),
         critical: status('critical'),
+        logo: {
+          mark: token('logo-mark'),
+          pulse: token('logo-pulse'),
+          dot: token('logo-dot'),
+          text: token('logo-text'),
+          tagline: token('logo-tagline'),
+        },
       },
       borderRadius: {
         sm: '6px',

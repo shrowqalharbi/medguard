@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Icon } from '../components/Icon'
+import { Logo } from '../components/Logo'
 import { Button } from '../components/ui'
 import { useSession } from '../lib/session'
 import { unlockAudio } from '../lib/sound'
@@ -36,17 +36,9 @@ export default function Login() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-6" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="flex flex-1 flex-col justify-center">
-        <div className="mb-10 flex flex-col items-center gap-3 text-center">
-          <span className="grid h-[72px] w-[72px] place-items-center rounded-lg bg-brand text-brand-on">
-            <Icon name="shield" size={36} />
-          </span>
-          <h1 className="text-[28px] font-bold tracking-wide" dir="ltr">
-            MEDGUARD
-          </h1>
-          <p className="text-[15px] text-secondary" dir="ltr">
-            Scan. Verify. Administer Safer.
-          </p>
-        </div>
+        <h1 className="mb-10 flex justify-center">
+          <Logo variant="full-en" size={88} />
+        </h1>
 
         <form onSubmit={submit} noValidate className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">

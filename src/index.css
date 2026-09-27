@@ -44,6 +44,13 @@
   --critical-fg: 179 38 30;
   --critical-solid: 194 31 31;
 
+  /* Brand mark (src/brand/mark.ts). Separate from --brand so the UI palette is untouched. */
+  --logo-mark: 14 99 168;
+  --logo-pulse: 74 155 224;
+  --logo-dot: 34 165 89;
+  --logo-text: 17 24 39;
+  --logo-tagline: 14 99 168;
+
   color-scheme: light;
 }
 
@@ -85,7 +92,27 @@
   --critical-fg: 255 107 107;
   --critical-solid: 232 67 61;
 
+  --logo-mark: 74 155 224;
+  --logo-pulse: 232 238 245;
+  --logo-text: 232 238 245;
+  --logo-tagline: 111 174 232;
+
   color-scheme: dark;
+}
+
+/* <Logo tone="…"> pins a palette regardless of the app theme. */
+.logo-light {
+  --logo-mark: 14 99 168;
+  --logo-pulse: 74 155 224;
+  --logo-text: 17 24 39;
+  --logo-tagline: 14 99 168;
+}
+
+.logo-dark {
+  --logo-mark: 74 155 224;
+  --logo-pulse: 232 238 245;
+  --logo-text: 232 238 245;
+  --logo-tagline: 111 174 232;
 }
 
 @keyframes sheet {
