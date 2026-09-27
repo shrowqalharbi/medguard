@@ -17,7 +17,7 @@ export default {
         sans: ['"IBM Plex Sans Arabic"', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        base: token('bg-base'),
+        canvas: token('bg-base'),
         surface: token('bg-surface'),
         'surface-2': token('bg-surface-2'),
         overlay: token('bg-overlay'),

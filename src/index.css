@@ -88,6 +88,37 @@
   color-scheme: dark;
 }
 
+@keyframes sheet {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+@keyframes scanline {
+  0%,
+  100% {
+    top: 8%;
+  }
+  50% {
+    top: 88%;
+  }
+}
+
+@keyframes pulse-dot {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+  }
+}
+
 html,
 body,
 #root {
@@ -95,6 +126,6 @@ body,
 }
 
 body {
-  @apply bg-base font-sans text-primary antialiased;
+  @apply bg-canvas font-sans text-primary antialiased;
   -webkit-tap-highlight-color: transparent;
 }

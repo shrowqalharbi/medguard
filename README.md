@@ -45,10 +45,27 @@ Vercel deployment, not the local dev server.
 ## Project layout
 
 ```
-src/engine/   pure decision engine (no UI, no network)
-src/data/     demo data (JSON) — edited by the nursing team
-docs/         data template for the nursing team
+src/engine/      pure decision engine (no UI, no network)
+src/data/        demo data (JSON) — edited by the nursing team
+src/nurse/       nurse app screens (login, scan, result, profile, calculator, settings)
+src/components/  shared UI (buttons, cards, bottom sheet, camera scanner)
+src/lib/         session state, event log, note analyzer client, sound, preferences
+api/             Vercel serverless function for the language-model note analyzer
+docs/            data template for the nursing team
 ```
+
+## Environment
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Vercel project settings | Enables the language-model note analyzer. Without it the app uses the offline matcher. |
+
+Only note text, date and author are sent to the analyzer — never names or record ids.
+
+## Stage backup
+
+Settings → "وضع العرض التجريبي" shows simulate-scan buttons on the scan screens,
+in case the camera or lighting fails during the live demo.
 
 ## Data disclaimer
 
