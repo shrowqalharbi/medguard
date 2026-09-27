@@ -1,4 +1,16 @@
 import type { SVGProps } from 'react'
+import { Activity, ClipboardList, FileHeart, IdCard, Pill, QrCode, ScanBarcode, type LucideIcon } from 'lucide-react'
+
+/** Medical icons from lucide-react, rendered with the same size/stroke props as PATHS. */
+const LUCIDE = {
+  scanBarcode: ScanBarcode,
+  qrCode: QrCode,
+  clipboardList: ClipboardList,
+  fileHeart: FileHeart,
+  pill: Pill,
+  activity: Activity,
+  idCard: IdCard,
+} as const satisfies Record<string, LucideIcon>
 
 /** Outline icons, same set as the Figma file (24×24, stroke-based). */
 const PATHS = {
@@ -8,12 +20,6 @@ const PATHS = {
     <>
       <path d="M20 21a8 8 0 0 0-16 0" />
       <circle cx="12" cy="7" r="4" />
-    </>
-  ),
-  pill: (
-    <>
-      <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
-      <path d="m8.5 8.5 7 7" />
     </>
   ),
   calculator: (
@@ -76,13 +82,6 @@ const PATHS = {
       <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" />
     </>
   ),
-  idCard: (
-    <>
-      <rect x="2" y="5" width="20" height="14" rx="2" />
-      <circle cx="8" cy="12" r="2.5" />
-      <path d="M14 10h4M14 14h4" />
-    </>
-  ),
   droplet: <path d="M12 2s7 7.5 7 12a7 7 0 1 1-14 0c0-4.5 7-12 7-12Z" />,
   file: (
     <>
@@ -125,7 +124,7 @@ const PATHS = {
   sparkle: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
 } as const
 
-export type IconName = keyof typeof PATHS
+export type IconName = keyof typeof PATHS | keyof typeof LUCIDE
 
 export function Icon({
   name,
@@ -133,6 +132,10 @@ export function Icon({
   strokeWidth = 2,
   ...rest
 }: { name: IconName; size?: number; strokeWidth?: number } & SVGProps<SVGSVGElement>) {
+  if (name in LUCIDE) {
+    const Lucide = LUCIDE[name as keyof typeof LUCIDE]
+    return <Lucide size={size} strokeWidth={strokeWidth} aria-hidden="true" {...rest} />
+  }
   return (
     <svg
       width={size}
@@ -146,7 +149,7 @@ export function Icon({
       aria-hidden="true"
       {...rest}
     >
-      {PATHS[name]}
+      {PATHS[name as keyof typeof PATHS]}
     </svg>
   )
 }

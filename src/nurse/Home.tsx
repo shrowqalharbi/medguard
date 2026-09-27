@@ -73,10 +73,10 @@ export default function Home() {
         )}
 
         <nav className="flex flex-col gap-3" aria-label="الإجراءات">
-          <Action to="/scan/patient" icon="scan" title="بدء فحص جديد" sub="امسحي سوار المريض ثم الدواء" primary />
+          <Action to="/scan/patient" icon="scanBarcode" title="بدء فحص جديد" sub="امسحي سوار المريض ثم الدواء" primary />
+          <Action to="/patient" icon="clipboardList" title="ملف المريض" sub="الحساسيات، الملاحظات، وجرعات اليوم" />
+          <Action to="/calculator" icon="pill" title="حاسبة الجرعة الكلوية" sub="الجرعة المناسبة حسب eGFR" />
           <Action to="/scan/hajj" icon="idCard" title="مريض حاج بدون سوار" sub="امسحي بطاقة الحاج لقراءة حساسياته وأدويته" />
-          <Action to="/patient" icon="user" title="ملف المريض" sub="الحساسيات، الملاحظات، وجرعات اليوم" />
-          <Action to="/calculator" icon="calculator" title="حاسبة الجرعة الكلوية" sub="الجرعة المناسبة حسب eGFR" />
         </nav>
       </div>
     </Screen>
