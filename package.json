@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "labels": "node scripts/make-labels.mjs"
+    "labels": "node scripts/make-labels.mjs",
+    "train-ranker": "python3 scripts/train_ranker.py"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
