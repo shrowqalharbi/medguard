@@ -65,7 +65,7 @@ export default function Home() {
             <span className="flex-1">
               <span className="block text-[12px] text-tertiary">المريض الحالي</span>
               <span className="block text-[15px] font-medium">
-                {patient.name} · غرفة {patient.room}
+                {patient.name} · {patient.hajj ? 'بطاقة حاج' : `غرفة ${patient.room}`}
               </span>
             </span>
             <span className="text-[13px] font-medium text-brand">مسح دواء</span>
@@ -74,6 +74,7 @@ export default function Home() {
 
         <nav className="flex flex-col gap-3" aria-label="الإجراءات">
           <Action to="/scan/patient" icon="scan" title="بدء فحص جديد" sub="امسحي سوار المريض ثم الدواء" primary />
+          <Action to="/scan/hajj" icon="idCard" title="مريض حاج بدون سوار" sub="امسحي بطاقة الحاج لقراءة حساسياته وأدويته" />
           <Action to="/patient" icon="user" title="ملف المريض" sub="الحساسيات، الملاحظات، وجرعات اليوم" />
           <Action to="/calculator" icon="calculator" title="حاسبة الجرعة الكلوية" sub="الجرعة المناسبة حسب eGFR" />
         </nav>

@@ -34,9 +34,18 @@ function summary(d: Decision) {
   const has = (...kinds: Finding['kind'][]) => d.all.find((f) => kinds.includes(f.kind))
   const allergy = has('allergy', 'allergy-from-note')
   const interaction = d.all.find((f) => f.kind === 'interaction')
-  const renal = has('renal-contraindicated', 'renal-adjust', 'renal-avoid', 'renal-near-threshold')
+  const renal = has('renal-contraindicated', 'renal-adjust', 'renal-avoid', 'renal-near-threshold', 'renal-unknown')
   return [
-    { label: 'الحساسية الدوائية', value: allergy ? (allergy.source === 'ai' ? 'محتملة (من ملاحظة)' : 'موثقة') : 'لا يوجد ✓' },
+    {
+      label: 'الحساسية الدوائية',
+      value: allergy
+        ? allergy.source === 'ai'
+          ? 'محتملة (من ملاحظة)'
+          : allergy.title.includes('بطاقة الحاج')
+            ? 'مصرّح بها في بطاقة الحاج'
+            : 'موثقة'
+        : 'لا يوجد ✓',
+    },
     { label: 'التعارض مع أدويته الحالية', value: interaction ? (interaction.severity === 'info' ? 'بسيط' : 'مهم') : 'لا يوجد ✓' },
     { label: 'الجرعة مقابل الكلى', value: renal ? renal.title : 'مناسبة ✓' },
   ]
@@ -61,8 +70,9 @@ export default function Result() {
 
   if (!patient || !drug || !decision) return <Navigate to="/scan/drug" replace />
 
-  const look = LOOK[decision.level]
   const p = decision.primary
+  const needsLab = p?.kind === 'renal-unknown'
+  const look = needsLab ? { ...LOOK.renal, icon: 'droplet' as const, label: 'يحتاج تحليل كلى' } : LOOK[decision.level]
   const aiPrimary = p?.source === 'ai'
 
   const finish = (outcome: Outcome, text: string) => {
@@ -106,7 +116,7 @@ export default function Result() {
           </span>
           <h1 className="text-[22px] font-bold">{done.text}</h1>
           <p className="max-w-[300px] text-[13px] leading-6 text-secondary">
-            {drug.nameAr} — {patient.name}، غرفة {patient.room}. سُجّل في ملف المريض وظهر في لوحة المشرفة.
+            {drug.nameAr} — {patient.name}، {patient.hajj ? 'مريض حاج بالطوارئ' : `غرفة ${patient.room}`}. سُجّل في ملف المريض وظهر في لوحة المشرفة.
           </p>
         </div>
       </Screen>
@@ -141,7 +151,7 @@ export default function Result() {
                 {drug.nameAr} {drug.strength}
               </p>
               <p className="text-[12px] text-tertiary">
-                {patient.name} · غرفة {patient.room}
+                {patient.name} · {patient.hajj ? `بطاقة حاج ${patient.hajj.pilgrimId}` : `غرفة ${patient.room}`}
               </p>
             </div>
             <Icon name="pill" size={20} className="text-tertiary" />
@@ -159,7 +169,7 @@ export default function Result() {
             <h3 className="mb-1 text-[13px] font-semibold text-secondary">السبب</h3>
             <p className="text-[15px] leading-7">
               {decision.level === 'renal' && decision.adjustedDose
-                ? `وظائف الكلى الحالية تستدعي تخفيض الجرعة. آخر eGFR: ${patient.egfr.value} مل/د (${patient.egfr.measuredAt}).`
+                ? `وظائف الكلى الحالية تستدعي تخفيض الجرعة. آخر eGFR: ${patient.egfr?.value} مل/د (${patient.egfr?.measuredAt}).`
                 : p.detail}
             </p>
             {decision.level === 'renal' && decision.adjustedDose && (
@@ -239,6 +249,17 @@ export default function Result() {
           </>
         )
       case 'renal':
+        if (needsLab)
+          return (
+            <>
+              <Button tone="renal" icon="bell" onClick={() => finish('escalated', 'طُلب تحليل كلى وأُبلغ الطبيب')}>
+                طلب تحليل كلى عاجل وإبلاغ الطبيب
+              </Button>
+              <Button variant="secondary" onClick={() => finish('given', 'أُعطي بموافقة الطبيب')}>
+                إعطاء الجرعة المعتادة بموافقة الطبيب
+              </Button>
+            </>
+          )
         return (
           <>
             <Button tone="renal" onClick={() => finish('given-adjusted', 'أُعطيت الجرعة المعدّلة')}>

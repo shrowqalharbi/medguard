@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { drugs, findDrugById, interactions, patients } from '../data'
+import { drugs, findDrugById, findPilgrim, interactions, parseHajjCard, patients, pilgrimToPatient } from '../data'
+import { resolveScan } from '../lib/resolve'
 import { evaluate, lexiconAnalyze, parseScan, signalsToFindings, type Finding } from './index'
 
 const TODAY = '2026-10-01'
@@ -106,7 +107,7 @@ describe('safety guarantees', () => {
   })
 
   it('metformin below eGFR 30 is blocked, not just adjusted', () => {
-    const low = { ...abdullah, egfr: { ...abdullah.egfr, value: 24 } }
+    const low = { ...abdullah, egfr: { ...abdullah.egfr!, value: 24 } }
     const d = evaluate({ patient: low, drug: drug('metformin'), today: TODAY }, ctx)
     expect(d.level).toBe('critical')
     expect(d.primary?.kind).toBe('renal-contraindicated')
@@ -128,6 +129,59 @@ describe('ranking model', () => {
     expect(after.primary!.noiseScore!).toBeGreaterThan(base)
     // ...but the colour does not change: the model ranks, the rules decide.
     expect(after.level).toBe('interaction')
+  })
+})
+
+describe('Hajj card — pilgrim with no hospital wristband', () => {
+  const rafiq = pilgrimToPatient(findPilgrim('H-1447-208153')!) // NSAID allergy, CKD, on metformin
+  const siti = pilgrimToPatient(findPilgrim('H-1447-417702')!) // 72, on warfarin, no allergy
+  const on = (patient: typeof rafiq, drugId: string) => evaluate({ patient, drug: drug(drugId), today: TODAY }, ctx)
+
+  it('reads the card QR, a bare typed id, and rejects other codes', () => {
+    expect(parseHajjCard('HAJJ:H-1447-208153')).toBe('H-1447-208153')
+    expect(parseHajjCard(' h-1447-208153 ')).toBe('H-1447-208153')
+    expect(parseHajjCard('A-2291')).toBeNull()
+    expect(resolveScan('HAJJ:H-1447-208153')).toMatchObject({ kind: 'pilgrim', pilgrim: { name: 'محمد رفيق حسين' } })
+    expect(resolveScan('HAJJ:H-1447-999999')).toEqual({ kind: 'pilgrim', pilgrimId: 'H-1447-999999', pilgrim: undefined })
+    // Wristbands and drug packs still resolve as before.
+    expect(resolveScan('A-2291').kind).toBe('patient')
+    expect(resolveScan('(01)06289990000014').kind).toBe('drug')
+  })
+
+  it('a card has no lab result: eGFR is missing, never assumed normal', () => {
+    expect(rafiq.egfr).toBeUndefined()
+    expect(rafiq.hajj?.language).toBe('الأردية')
+  })
+
+  it('an allergy declared on the card blocks like a documented one (ibuprofen → red)', () => {
+    const d = on(rafiq, 'ibuprofen')
+    expect(d.level).toBe('critical')
+    expect(d.primary?.kind).toBe('allergy')
+    expect(d.primary?.title).toContain('بطاقة الحاج')
+  })
+
+  it('declared kidney disease + no eGFR → yellow, asks for a kidney test (metformin)', () => {
+    const d = on(rafiq, 'metformin')
+    expect(d.level).toBe('renal')
+    expect(d.primary?.kind).toBe('renal-unknown')
+    expect(d.adjustedDose).toBeUndefined()
+  })
+
+  it('a drug that does not depend on the kidneys stays green (paracetamol)', () => {
+    expect(on(rafiq, 'paracetamol').level).toBe('safe')
+  })
+
+  it('card medicines feed the interaction check (warfarin + ibuprofen → orange)', () => {
+    const d = on(siti, 'ibuprofen')
+    expect(d.level).toBe('interaction')
+    expect(d.deferred.map((f) => f.kind)).toContain('renal-unknown')
+  })
+
+  it('a young patient with no eGFR and no kidney disease is not interrupted', () => {
+    const young = { ...siti, age: 40, currentMeds: [], conditions: [] }
+    const d = on(young, 'amoxicillin')
+    expect(d.level).toBe('safe')
+    expect(d.deferred.map((f) => f.kind)).toContain('renal-unknown')
   })
 })
 

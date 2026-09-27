@@ -55,7 +55,7 @@ export default function ScanDrug() {
     <Screen
       dark
       title="مسح باركود الدواء"
-      back="/scan/patient"
+      back={patient.hajj ? '/scan/hajj' : '/scan/patient'}
       footer={
         <>
           {getDemo() && (
@@ -82,9 +82,11 @@ export default function ScanDrug() {
     >
       <div className="flex flex-1 flex-col items-center gap-4 pt-2">
         <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[12px]">
-          <Icon name="user" size={14} />
+          <Icon name={patient.hajj ? 'idCard' : 'user'} size={14} />
           <span className="truncate">
-            {patient.name} — سوار {patient.wristband} — غرفة {patient.room}
+            {patient.hajj
+              ? `${patient.name} — بطاقة حاج ${patient.hajj.pilgrimId} — ${patient.room}`
+              : `${patient.name} — سوار ${patient.wristband} — غرفة ${patient.room}`}
           </span>
         </span>
 

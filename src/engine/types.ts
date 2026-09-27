@@ -28,6 +28,7 @@ export type FindingKind =
   | 'renal-contraindicated'
   | 'renal-near-threshold'
   | 'renal-avoid'
+  | 'renal-unknown'
   | 'expired'
   | 'routine'
 
@@ -51,6 +52,18 @@ export interface DrugFamilyAllergy {
   family: string
   reaction: string
   recordedAt?: string
+  /** Where the allergy came from. Missing = the hospital record. */
+  source?: 'hospital' | 'hajj-card'
+}
+
+/** Identity and declared health data read from a pilgrim's Hajj card. */
+export interface HajjInfo {
+  pilgrimId: string
+  nameLatin: string
+  nationality: string
+  language: string
+  campaign: string
+  emergencyContact?: string
 }
 
 export interface ClinicalNote {
@@ -70,8 +83,13 @@ export interface Patient {
   allergies: DrugFamilyAllergy[]
   /** Drug ids the patient is currently receiving. */
   currentMeds: string[]
-  egfr: { value: number; measuredAt: string; source: string }
+  /** Latest kidney function. Missing for patients with no lab result yet (e.g. a pilgrim from the ER). */
+  egfr?: { value: number; measuredAt: string; source: string }
+  /** Chronic conditions, e.g. 'ckd', 'diabetes'. 'ckd' raises the renal checks when eGFR is missing. */
+  conditions?: string[]
   clinicalNotes: ClinicalNote[]
+  /** Set when the patient was identified by a Hajj card instead of a hospital wristband. */
+  hajj?: HajjInfo
 }
 
 export interface RenalRule {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { AiBadge, Button, Card, Row, Screen } from '../components/ui'
-import { findDrugById } from '../data'
+import { CONDITION_AR, findDrugById } from '../data'
 import type { NoteSignal } from '../engine'
 import { loadEvents, type Outcome } from '../lib/events'
 import { patientSignals } from '../lib/notes'
@@ -55,15 +55,24 @@ export default function PatientProfile() {
           <div>
             <p className="text-base font-semibold">{patient.name}</p>
             <p className="text-[12px] text-secondary">
-              {patient.age} سنة · سوار {patient.wristband} · غرفة {patient.room}
+              {patient.hajj
+                ? `${patient.age} سنة · بطاقة حاج ${patient.hajj.pilgrimId} · ${patient.hajj.nationality}`
+                : `${patient.age} سنة · سوار ${patient.wristband} · غرفة ${patient.room}`}
             </p>
           </div>
         </Card>
 
+        {patient.hajj && (
+          <p className="flex items-start gap-2 rounded-md bg-brand-subtle p-3 text-[13px] leading-6 text-brand">
+            <Icon name="idCard" size={18} className="mt-0.5 shrink-0" />
+            البيانات مقروءة من بطاقة الحاج ولم يُفتح له ملف في المستشفى بعد. اللغة: {patient.hajj.language}.
+          </p>
+        )}
+
         <Card>
           <h2 className="mb-1 text-[13px] font-semibold text-secondary">البيانات السريرية</h2>
           <Row
-            label="الحساسيات المسجلة"
+            label={patient.hajj ? 'الحساسيات (من البطاقة)' : 'الحساسيات المسجلة'}
             value={
               patient.allergies.length ? (
                 <span className="text-critical-fg">
@@ -75,7 +84,19 @@ export default function PatientProfile() {
             }
           />
           <Row label="فصيلة الدم" value={patient.bloodType ?? '—'} />
-          <Row label="آخر eGFR" value={`${patient.egfr.value} مل/د — ${patient.egfr.measuredAt}`} />
+          <Row
+            label="آخر eGFR"
+            value={
+              patient.egfr ? (
+                `${patient.egfr.value} مل/د — ${patient.egfr.measuredAt}`
+              ) : (
+                <span className="text-renal-fg">غير متوفر — اطلبي تحليل كلى</span>
+              )
+            }
+          />
+          {!!patient.conditions?.length && (
+            <Row label="أمراض مزمنة" value={patient.conditions.map((c) => CONDITION_AR[c] ?? c).join('، ')} />
+          )}
           <Row label="الأدوية الحالية" value={meds.length ? meds.join('، ') : 'لا يوجد'} />
         </Card>
 
@@ -88,6 +109,11 @@ export default function PatientProfile() {
               <AiBadge label="حلّلها MEDGUARD" />
             )}
           </div>
+          {patient.clinicalNotes.length === 0 && (
+            <p className="py-2 text-[13px] text-secondary">
+              {patient.hajj ? 'لا توجد ملاحظات سريرية: أول زيارة للمستشفى.' : 'لا توجد ملاحظات سريرية.'}
+            </p>
+          )}
           <ul className="flex flex-col gap-2">
             {[...patient.clinicalNotes]
               .sort((a, b) => b.date.localeCompare(a.date))

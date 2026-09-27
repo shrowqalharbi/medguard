@@ -3,13 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Scanner } from '../components/Scanner'
 import { BottomSheet, Button, Screen } from '../components/ui'
-import { patients } from '../data'
+import { pilgrims } from '../data'
 import { getDemo } from '../lib/prefs'
 import { resolveScan } from '../lib/resolve'
 import { useSession } from '../lib/session'
 import { unlockAudio } from '../lib/sound'
 
-export default function ScanPatient() {
+/**
+ * Pilgrim with no hospital wristband (typically brought to the ER during Hajj):
+ * the nurse scans the QR on their Hajj card instead. The card links to what the
+ * pilgrim declared at registration: allergies, chronic conditions, medicines.
+ */
+export default function ScanHajj() {
   const navigate = useNavigate()
   const { setPatient } = useSession()
   const [error, setError] = useState<string | null>(null)
@@ -18,33 +23,29 @@ export default function ScanPatient() {
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState<string | null>(null)
 
-  const handle = (text: string): boolean => {
+  const handle = (text: string) => {
     const r = resolveScan(text)
+    if (r.kind === 'pilgrim' && r.pilgrim) return navigate('/hajj', { state: { pilgrimId: r.pilgrimId } })
     if (r.kind === 'patient') {
+      // Already admitted: the hospital record is more complete than the card.
       setPatient(r.patient)
-      navigate('/scan/drug')
-      return true
+      return navigate('/scan/drug')
     }
-    if (r.kind === 'pilgrim' && r.pilgrim) {
-      navigate('/hajj', { state: { pilgrimId: r.pilgrimId } })
-      return true
-    }
-    if (r.kind === 'pilgrim') {
-      setError(`بطاقة الحاج ${r.pilgrimId} غير موجودة في السجل الصحي للحج.`)
-    } else if (r.kind === 'drug') {
-      setError('هذا باركود دواء. امسحي سوار المريض أولاً حتى نعرف لمن الجرعة.')
-    } else {
-      setError(`لا يوجد مريض منوّم بهذا السوار (${r.value}). تأكدي من السوار أو أدخلي الرقم يدوياً.`)
-    }
-    setAttempt((n) => n + 1) // restart the camera
-    return false
+    setError(
+      r.kind === 'pilgrim'
+        ? `بطاقة الحاج ${r.pilgrimId} غير موجودة في السجل الصحي للحج. أدخلي الرقم يدوياً للتأكد، أو عامليه كمريض جديد دون بيانات.`
+        : r.kind === 'drug'
+          ? 'هذا باركود دواء. امسحي رمز QR الموجود على بطاقة الحاج أولاً.'
+          : 'هذا الرمز ليس بطاقة حاج. ابحثي عن رمز QR على البطاقة، أو أدخلي رقم الحاج يدوياً.',
+    )
+    setAttempt((n) => n + 1)
   }
 
   const submitManual = () => {
-    if (!code.trim()) return setCodeError('اكتبي رقم السوار أولاً، مثل A-2291')
+    if (!code.trim()) return setCodeError('اكتبي رقم الحاج كما في البطاقة، مثل H-1447-208153')
     const r = resolveScan(code)
-    if (r.kind !== 'patient' && !(r.kind === 'pilgrim' && r.pilgrim))
-      return setCodeError(`لا يوجد مريض بالرقم ${code.trim()}.`)
+    if (r.kind !== 'pilgrim') return setCodeError('صيغة الرقم غير صحيحة. رقم الحاج يبدأ بـ H ثم السنة ثم 6 أرقام.')
+    if (!r.pilgrim) return setCodeError(`لا يوجد حاج بالرقم ${r.pilgrimId} في السجل الصحي.`)
     setManual(false)
     handle(code)
   }
@@ -52,16 +53,16 @@ export default function ScanPatient() {
   return (
     <Screen
       dark
-      title="مسح سوار المريض"
+      title="مسح بطاقة الحاج"
       back="/home"
       footer={
         <>
           {getDemo() && (
             <div className="flex gap-2">
-              {patients.map((p) => (
+              {pilgrims.map((p) => (
                 <button
-                  key={p.id}
-                  onClick={() => (unlockAudio(), handle(p.wristband))}
+                  key={p.pilgrimId}
+                  onClick={() => (unlockAudio(), handle(`HAJJ:${p.pilgrimId}`))}
                   className="flex-1 rounded-md border border-white/15 py-2 text-[12px] text-white/70"
                 >
                   محاكاة: {p.name.split(' ')[0]}
@@ -70,23 +71,18 @@ export default function ScanPatient() {
             </div>
           )}
           <Button variant="secondary" icon="keyboard" onClick={() => (unlockAudio(), setManual(true))}>
-            إدخال رقم السوار يدوياً
+            إدخال رقم الحاج يدوياً
           </Button>
-          <button
-            onClick={() => navigate('/scan/hajj')}
-            className="flex items-center justify-center gap-1.5 py-1 text-[13px] text-[#4FA3E8]"
-          >
-            <Icon name="idCard" size={16} />
-            حاج بدون سوار؟ امسحي بطاقة الحاج
-          </button>
         </>
       }
     >
       <div className="flex flex-1 flex-col items-center gap-4 pt-2">
-        <Scanner key={attempt} onResult={handle} aspect="square" label="جارٍ البحث عن السوار…" />
+        <Scanner key={attempt} onResult={handle} aspect="square" label="جارٍ البحث عن رمز البطاقة…" />
         <div className="text-center">
-          <p className="text-[15px] font-medium">وجّهي الكاميرا نحو باركود سوار المريض</p>
-          <p className="mt-1 text-[13px] text-white/55">يُقرأ السوار تلقائياً دون الضغط على أي زر</p>
+          <p className="text-[15px] font-medium">وجّهي الكاميرا نحو رمز QR في بطاقة الحاج</p>
+          <p className="mt-1 text-[13px] leading-6 text-white/55">
+            للحاج الذي لم يُسجَّل له سوار بعد. نقرأ حساسياته وأدويته المصرّح بها في البطاقة.
+          </p>
         </div>
         {error && (
           <p role="alert" className="flex items-start gap-2 rounded-md bg-critical-solid/15 p-3 text-[13px] leading-6 text-[#FF8A8A]">
@@ -104,24 +100,24 @@ export default function ScanPatient() {
           }}
           className="flex flex-col gap-3 text-primary"
         >
-          <label htmlFor="wb" className="text-base font-semibold">
-            رقم سوار المريض
+          <label htmlFor="pid" className="text-base font-semibold">
+            رقم الحاج
           </label>
           <input
-            id="wb"
+            id="pid"
             autoFocus
             dir="ltr"
             value={code}
             onChange={(e) => (setCode(e.target.value), setCodeError(null))}
-            placeholder="A-2291"
+            placeholder="H-1447-208153"
             aria-invalid={!!codeError}
-            aria-describedby="wb-err"
+            aria-describedby="pid-err"
             className={`h-12 rounded-md border bg-surface px-4 text-[15px] outline-none focus:ring-2 focus:ring-brand/40 ${
               codeError ? 'border-critical-solid' : 'border-line'
             }`}
           />
           {codeError && (
-            <p id="wb-err" className="text-[13px] text-critical-fg">
+            <p id="pid-err" className="text-[13px] text-critical-fg">
               {codeError}
             </p>
           )}

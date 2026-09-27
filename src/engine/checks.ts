@@ -20,14 +20,21 @@ const NEAR_THRESHOLD_MARGIN = 10
 export function checkAllergy(patient: Patient, drug: Drug): Finding[] {
   return patient.allergies
     .filter((a) => drug.families.includes(a.family))
-    .map((a) => ({
-      id: `allergy:${a.family}`,
-      kind: 'allergy' as const,
-      severity: 'critical' as const,
-      source: 'rule' as const,
-      title: `حساسية موثقة — ${familyLabel(a.family)}`,
-      detail: `${drug.nameAr} من عائلة ${familyLabel(a.family)}. التفاعل المسجل: ${a.reaction}.`,
-    }))
+    .map((a) => {
+      const card = a.source === 'hajj-card'
+      return {
+        id: `allergy:${a.family}`,
+        kind: 'allergy' as const,
+        severity: 'critical' as const,
+        source: 'rule' as const,
+        title: card
+          ? `حساسية مصرّح بها في بطاقة الحاج — ${familyLabel(a.family)}`
+          : `حساسية موثقة — ${familyLabel(a.family)}`,
+        detail: card
+          ? `${drug.nameAr} من عائلة ${familyLabel(a.family)}. صرّح الحاج في بطاقته بـ: ${a.reaction}. لم تُوثَّق بعد في ملف المستشفى، لكنها تمنع الإعطاء حتى يراجعها الطبيب.`
+          : `${drug.nameAr} من عائلة ${familyLabel(a.family)}. التفاعل المسجل: ${a.reaction}.`,
+      }
+    })
 }
 
 export function checkInteractions(
@@ -61,6 +68,7 @@ export function checkInteractions(
 export function checkRenal(patient: Patient, drug: Drug): Finding[] {
   const rule = drug.renal
   if (!rule) return []
+  if (!patient.egfr) return [renalUnknown(patient, drug)]
   const egfr = patient.egfr.value
   const reading = `آخر eGFR: ${egfr} مل/د (${patient.egfr.source})`
 
@@ -113,6 +121,35 @@ export function checkRenal(patient: Patient, drug: Drug): Finding[] {
   }
 
   return findings
+}
+
+/**
+ * The drug's dose depends on kidney function but there is no eGFR yet.
+ * It interrupts (yellow) only when there is a reason to suspect weak kidneys:
+ * declared kidney disease or age 65+. Otherwise it is deferred, so a routine
+ * ER patient does not trigger a yellow screen for every renally-cleared drug.
+ */
+function renalUnknown(patient: Patient, drug: Drug): Finding {
+  const ckd = patient.conditions?.includes('ckd')
+  const elderly = patient.age >= 65
+  const why = ckd
+    ? patient.hajj
+      ? 'بطاقة الحاج تذكر مرض كلى مزمن.'
+      : 'المريض لديه مرض كلى مزمن.'
+    : elderly
+      ? 'العمر 65 أو أكثر يرفع احتمال ضعف الكلى.'
+      : ''
+  return {
+    id: `renal:unknown:${drug.id}`,
+    kind: 'renal-unknown',
+    severity: ckd || elderly ? 'renal' : 'info',
+    source: 'rule',
+    title: 'لا يوجد تحليل كلى (eGFR)',
+    detail: `جرعة ${drug.nameAr} تعتمد على وظائف الكلى، ولا يوجد eGFR لهذا المريض. ${why} اطلبي تحليل كلى عاجل.`.replace(
+      /\s+/g,
+      ' ',
+    ),
+  }
 }
 
 export function checkExpiry(pack: ScannedPack | undefined, today: string): Finding[] {

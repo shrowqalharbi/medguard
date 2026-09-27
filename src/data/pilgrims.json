@@ -1,0 +1,32 @@
+[
+  {
+    "pilgrimId": "H-1447-208153",
+    "name": "محمد رفيق حسين",
+    "nameLatin": "Muhammad Rafiq Hussain",
+    "nationality": "باكستان",
+    "language": "الأردية",
+    "age": 67,
+    "bloodType": "B+",
+    "campaign": "حملة النور — مكتب شؤون حجاج باكستان",
+    "emergencyContact": "مرشد الحملة: 0551234870",
+    "allergies": [
+      { "family": "nsaid", "reaction": "ضيق تنفس بعد الأسبرين", "recordedAt": "تسجيل الحج 1447", "source": "hajj-card" }
+    ],
+    "conditions": ["ckd", "diabetes", "hypertension"],
+    "currentMeds": ["metformin", "amlodipine"]
+  },
+  {
+    "pilgrimId": "H-1447-417702",
+    "name": "سيتي أمينة",
+    "nameLatin": "Siti Aminah",
+    "nationality": "إندونيسيا",
+    "language": "الإندونيسية",
+    "age": 72,
+    "bloodType": "O+",
+    "campaign": "مكتب شؤون حجاج إندونيسيا — القطاع 4",
+    "emergencyContact": "مرشد الحملة: 0559081142",
+    "allergies": [],
+    "conditions": ["atrial-fibrillation"],
+    "currentMeds": ["warfarin"]
+  }
+]

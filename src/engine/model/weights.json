@@ -7,6 +7,7 @@
     "interaction": 0.3,
     "renal-avoid": -0.4,
     "renal-adjust": -0.8,
+    "renal-unknown": -0.6,
     "allergy-from-note": -3.0,
     "allergy": -4.0,
     "renal-contraindicated": -4.0,

@@ -30,6 +30,35 @@ Everything else is kept in a collapsed, ranked list under the result.
 
 All three guarantees are covered by tests in `src/engine/engine.test.ts`.
 
+## Hajj card (pilgrim with no wristband)
+
+During Hajj season many ER patients are pilgrims with no hospital record yet.
+Home → "مريض حاج بدون سوار" scans the QR on the Hajj card (`HAJJ:H-1447-208153`,
+or the number typed by hand) and reads what the pilgrim declared at
+registration: allergies, chronic conditions, current medicines, language and
+campaign contact. After the nurse confirms identity, the normal drug scan runs:
+
+- A card-declared allergy is **red**, like a documented one, until a doctor reviews it.
+- Card medicines feed the interaction check.
+- There is no eGFR yet, so it is never assumed normal. Kidney-dosed drugs turn
+  **yellow ("يحتاج تحليل كلى")** when the card declares kidney disease or the
+  patient is 65+, otherwise they are a deferred note.
+
+Demo registry: `src/data/pilgrims.json`. Scanning a card on the wristband screen
+also works.
+
+## Printable stage props
+
+```bash
+npm run labels   # → print/labels.html, open and print on A4 at 100% scale
+```
+
+Wristbands (Code 128), Hajj cards (QR) and medicine pack labels (GS1 DataMatrix
+with expiry and batch, plus one expired backup pack), all generated from
+`src/data`. `scripts/labels.test.ts` decodes every printed code with the same
+ZXing library as the camera and checks it resolves to the right patient or drug.
+`print/medguard-labels.pdf` is a ready-to-print copy.
+
 ## Run it
 
 ```bash
@@ -47,7 +76,8 @@ Vercel deployment, not the local dev server.
 ```
 src/engine/      pure decision engine (no UI, no network)
 src/data/        demo data (JSON) — edited by the nursing team
-src/nurse/       nurse app screens (login, scan, result, profile, calculator, settings)
+src/nurse/       nurse app screens (login, scan, Hajj card, result, profile, calculator, settings)
+scripts/         printable labels generator + scan test
 src/components/  shared UI (buttons, cards, bottom sheet, camera scanner)
 src/lib/         session state, event log, note analyzer client, sound, preferences
 api/             Vercel serverless function for the language-model note analyzer

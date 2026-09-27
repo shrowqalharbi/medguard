@@ -28,7 +28,7 @@ const TONE = {
 export default function Calculator() {
   const { patient } = useSession()
   const [drugId, setDrugId] = useState(RENAL_DRUGS[0].id)
-  const [egfr, setEgfr] = useState(patient ? String(patient.egfr.value) : '')
+  const [egfr, setEgfr] = useState(patient?.egfr ? String(patient.egfr.value) : '')
 
   const value = Number(egfr)
   const valid = egfr.trim() !== '' && Number.isFinite(value) && value > 0 && value <= 150
@@ -74,7 +74,9 @@ export default function Calculator() {
           />
           {patient && (
             <p className="text-[12px] text-tertiary">
-              من ملف {patient.name}: {patient.egfr.value} ({patient.egfr.measuredAt})
+              {patient.egfr
+                ? `من ملف ${patient.name}: ${patient.egfr.value} (${patient.egfr.measuredAt})`
+                : `لا يوجد eGFR في ملف ${patient.name}. أدخلي القيمة بعد وصول التحليل.`}
             </p>
           )}
           {egfr !== '' && !valid && <p className="text-[13px] text-critical-fg">أدخلي قيمة بين 1 و150.</p>}

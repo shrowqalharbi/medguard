@@ -40,6 +40,8 @@ function explain(primary: Finding | null, deferredCount: number): string {
       return 'منع مطلق: يتقدم على أي تنبيه آخر لأنه يهدد سلامة المريض.'
     case 'allergy-from-note':
       return 'الذكاء وجد دليلاً في ملاحظة سريرية. يرفع الخطر فقط ولا يخفّضه، والتأكيد للطبيب.'
+    case 'renal-unknown':
+      return 'الدواء يحتاج تحليل كلى لتحديد الجرعة، ولا يوجد تحليل لهذا المريض.'
     case 'interaction':
       return 'أعلى خطر في هذا الفحص تعارض دوائي يحتاج تأكيدك وسبب المتابعة.'
     default:

@@ -1,11 +1,13 @@
 import { parseScan, type Drug, type Patient, type ScannedPack } from '../engine'
-import { findDrugByGtin, findPatientByWristband } from '../data'
+import { findDrugByGtin, findPatientByWristband, findPilgrim, parseHajjCard, type PilgrimRecord } from '../data'
 
 /** Turns raw scanner text into a patient, a drug, or a clear reason why not. */
 
 export type Resolved =
   | { kind: 'patient'; patient: Patient }
   | { kind: 'drug'; drug: Drug; pack?: ScannedPack }
+  /** A Hajj card QR. `pilgrim` is missing when the card is valid but not in the health registry. */
+  | { kind: 'pilgrim'; pilgrimId: string; pilgrim?: PilgrimRecord }
   | { kind: 'unknown'; value: string }
 
 /** EAN-13 / UPC-A printed on some packs → GTIN-14 by left-padding. */
@@ -18,6 +20,9 @@ export function resolveScan(text: string): Resolved {
     const drug = scan.pack.gtin ? findDrugByGtin(scan.pack.gtin) : undefined
     return drug ? { kind: 'drug', drug, pack: scan.pack } : { kind: 'unknown', value: scan.pack.gtin ?? text }
   }
+
+  const pilgrimId = parseHajjCard(scan.value)
+  if (pilgrimId) return { kind: 'pilgrim', pilgrimId, pilgrim: findPilgrim(pilgrimId) }
 
   const patient = findPatientByWristband(scan.value)
   if (patient) return { kind: 'patient', patient }

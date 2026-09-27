@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { applyTheme, getTheme } from './lib/prefs'
 import { SessionProvider, useSession } from './lib/session'
 import Calculator from './nurse/Calculator'
+import HajjCard from './nurse/HajjCard'
 import Home from './nurse/Home'
 import Login from './nurse/Login'
 import PatientProfile from './nurse/PatientProfile'
@@ -12,6 +13,7 @@ import Settings from './nurse/Settings'
 // The camera library is large: load it only when a scan screen opens.
 const ScanPatient = lazy(() => import('./nurse/ScanPatient'))
 const ScanDrug = lazy(() => import('./nurse/ScanDrug'))
+const ScanHajj = lazy(() => import('./nurse/ScanHajj'))
 
 function RequireNurse({ children }: { children: ReactNode }) {
   const { nurse } = useSession()
@@ -27,6 +29,8 @@ function Routed() {
       <Route path="/home" element={guard(<Home />)} />
       <Route path="/scan/patient" element={guard(<ScanPatient />)} />
       <Route path="/scan/drug" element={guard(<ScanDrug />)} />
+      <Route path="/scan/hajj" element={guard(<ScanHajj />)} />
+      <Route path="/hajj" element={guard(<HajjCard />)} />
       <Route path="/result" element={guard(<Result />)} />
       <Route path="/patient" element={guard(<PatientProfile />)} />
       <Route path="/calculator" element={guard(<Calculator />)} />
