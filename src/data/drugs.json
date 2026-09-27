@@ -1,0 +1,107 @@
+[
+  {
+    "id": "paracetamol",
+    "nameAr": "باراسيتامول",
+    "nameEn": "Paracetamol",
+    "brandNames": ["Panadol", "بنادول", "Adol", "أدول"],
+    "gtin": "06289990000014",
+    "families": [],
+    "strength": "500 ملغ",
+    "standardDose": "500 ملغ كل 6 ساعات عند الحاجة",
+    "routineNotes": ["لا تتجاوز 4 غ في اليوم"]
+  },
+  {
+    "id": "metformin",
+    "nameAr": "ميتفورمين",
+    "nameEn": "Metformin",
+    "brandNames": ["Glucophage", "جلوكوفاج"],
+    "gtin": "06289990000021",
+    "families": [],
+    "strength": "1000 ملغ",
+    "standardDose": "1000 ملغ مرتين يومياً",
+    "renal": {
+      "adjustBelow": 45,
+      "adjustedDose": "500 ملغ مرتين يومياً",
+      "contraindicatedBelow": 30
+    },
+    "routineNotes": ["يؤخذ مع الطعام"]
+  },
+  {
+    "id": "ibuprofen",
+    "nameAr": "إيبوبروفين",
+    "nameEn": "Ibuprofen",
+    "brandNames": ["Brufen", "بروفين", "Advil"],
+    "gtin": "06289990000038",
+    "families": ["nsaid"],
+    "strength": "400 ملغ",
+    "standardDose": "400 ملغ كل 8 ساعات",
+    "renal": {
+      "avoidBelow": 60,
+      "avoidReason": "مضادات الالتهاب غير الستيرويدية قد تضعف وظائف الكلى."
+    },
+    "routineNotes": ["يؤخذ مع الطعام"]
+  },
+  {
+    "id": "amoxicillin",
+    "nameAr": "أموكسيسيللين",
+    "nameEn": "Amoxicillin",
+    "brandNames": ["Amoxil", "أموكسيل"],
+    "gtin": "06289990000045",
+    "families": ["penicillin"],
+    "strength": "500 ملغ",
+    "standardDose": "500 ملغ كل 8 ساعات",
+    "renal": {
+      "adjustBelow": 30,
+      "adjustedDose": "500 ملغ كل 12 ساعة"
+    },
+    "routineNotes": ["تُكمل مدة العلاج كاملة"]
+  },
+  {
+    "id": "augmentin",
+    "nameAr": "أموكسيسيللين/كلافولانات",
+    "nameEn": "Amoxicillin/Clavulanate",
+    "brandNames": ["Augmentin", "أوجمنتين"],
+    "gtin": "06289990000052",
+    "families": ["penicillin"],
+    "strength": "625 ملغ",
+    "standardDose": "625 ملغ كل 8 ساعات",
+    "renal": {
+      "adjustBelow": 30,
+      "adjustedDose": "625 ملغ كل 12 ساعة"
+    },
+    "routineNotes": ["يؤخذ مع بداية الوجبة"]
+  },
+  {
+    "id": "warfarin",
+    "nameAr": "وارفارين",
+    "nameEn": "Warfarin",
+    "brandNames": ["Coumadin", "كومادين"],
+    "gtin": "06289990000069",
+    "families": [],
+    "strength": "5 ملغ",
+    "standardDose": "حسب قراءة INR",
+    "routineNotes": []
+  },
+  {
+    "id": "omeprazole",
+    "nameAr": "أوميبرازول",
+    "nameEn": "Omeprazole",
+    "brandNames": ["Losec", "لوسك"],
+    "gtin": "06289990000076",
+    "families": [],
+    "strength": "20 ملغ",
+    "standardDose": "20 ملغ مرة يومياً",
+    "routineNotes": ["يؤخذ قبل الإفطار"]
+  },
+  {
+    "id": "amlodipine",
+    "nameAr": "أملوديبين",
+    "nameEn": "Amlodipine",
+    "brandNames": ["Norvasc", "نورفاسك"],
+    "gtin": "06289990000083",
+    "families": [],
+    "strength": "5 ملغ",
+    "standardDose": "5 ملغ مرة يومياً",
+    "routineNotes": []
+  }
+]

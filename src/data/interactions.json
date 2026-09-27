@@ -1,0 +1,26 @@
+[
+  {
+    "a": "ibuprofen",
+    "b": "warfarin",
+    "grade": "major",
+    "effect": "يزيد خطر النزيف بشكل ملحوظ عند الجمع مع مضادات التخثر."
+  },
+  {
+    "a": "amoxicillin",
+    "b": "warfarin",
+    "grade": "minor",
+    "effect": "قد يرفع قراءة INR، يُنصح بمتابعتها."
+  },
+  {
+    "a": "augmentin",
+    "b": "warfarin",
+    "grade": "minor",
+    "effect": "قد يرفع قراءة INR، يُنصح بمتابعتها."
+  },
+  {
+    "a": "paracetamol",
+    "b": "warfarin",
+    "grade": "minor",
+    "effect": "الاستخدام المنتظم بجرعات عالية قد يرفع INR."
+  }
+]

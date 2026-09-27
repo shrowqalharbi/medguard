@@ -1,0 +1,52 @@
+[
+  {
+    "id": "p-abdullah",
+    "wristband": "A-2291",
+    "name": "عبدالله بن محمد الحربي",
+    "age": 58,
+    "bloodType": "O+",
+    "room": "214",
+    "ward": "قسم الباطنة — الطابق 3",
+    "allergies": [
+      { "family": "penicillin", "reaction": "صدمة تأقية (Anaphylaxis)", "recordedAt": "2024" }
+    ],
+    "currentMeds": ["warfarin"],
+    "egfr": { "value": 38, "measuredAt": "اليوم 6:40 ص", "source": "المختبر المركزي" },
+    "clinicalNotes": [
+      {
+        "date": "2024-03-11",
+        "author": "طوارئ",
+        "text": "دخول بصدمة تأقية بعد جرعة بنسلين، تم تسجيل الحساسية."
+      }
+    ]
+  },
+  {
+    "id": "p-saad",
+    "wristband": "A-3107",
+    "name": "سعد بن فهد العتيبي",
+    "age": 64,
+    "bloodType": "A+",
+    "room": "216",
+    "ward": "قسم الباطنة — الطابق 3",
+    "allergies": [],
+    "currentMeds": ["amlodipine"],
+    "egfr": { "value": 72, "measuredAt": "أمس 7:15 ص", "source": "المختبر المركزي" },
+    "clinicalNotes": [
+      {
+        "date": "2023-05-02",
+        "author": "عيادة",
+        "text": "متابعة ضغط الدم، مستقر."
+      },
+      {
+        "date": "2022-11-19",
+        "author": "تمريض",
+        "text": "يفضّل الأدوية السائلة."
+      },
+      {
+        "date": "2021-08-07",
+        "author": "طوارئ",
+        "text": "راجع بطفح جلدي وحكة بعد أوجمنتين، وتم إيقافه."
+      }
+    ]
+  }
+]

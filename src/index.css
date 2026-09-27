@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens — mirror the "Color" variable collection in the MEDGUARD Figma file.
+ * Values are RGB triplets so Tailwind opacity modifiers (bg-brand/10) keep working.
+ */
+:root {
+  --bg-base: 246 248 250;
+  --bg-surface: 255 255 255;
+  --bg-surface-2: 238 242 246;
+  --bg-overlay: 15 23 32;
+
+  --text-primary: 16 24 32;
+  --text-secondary: 87 98 109;
+  --text-tertiary: 139 148 160;
+
+  --border-default: 225 230 235;
+  --border-strong: 199 207 215;
+
+  --brand: 11 95 165;
+  --brand-hover: 8 74 130;
+  --brand-subtle: 231 241 250;
+  --on-brand: 255 255 255;
+
+  --safe-bg: 230 247 236;
+  --safe-border: 167 227 190;
+  --safe-fg: 28 138 76;
+  --safe-solid: 28 138 76;
+
+  --renal-bg: 255 247 222;
+  --renal-border: 243 221 139;
+  --renal-fg: 138 106 0;
+  --renal-solid: 200 154 0;
+
+  --interaction-bg: 255 238 224;
+  --interaction-border: 245 199 154;
+  --interaction-fg: 177 90 0;
+  --interaction-solid: 217 122 31;
+
+  --critical-bg: 253 234 234;
+  --critical-border: 243 183 179;
+  --critical-fg: 179 38 30;
+  --critical-solid: 194 31 31;
+
+  color-scheme: light;
+}
+
+:root.dark {
+  --bg-base: 13 20 32;
+  --bg-surface: 21 30 43;
+  --bg-surface-2: 28 39 53;
+  --bg-overlay: 0 0 0;
+
+  --text-primary: 241 245 248;
+  --text-secondary: 170 180 192;
+  --text-tertiary: 120 130 143;
+
+  --border-default: 40 50 63;
+  --border-strong: 58 69 82;
+
+  --brand: 79 163 232;
+  --brand-hover: 111 182 238;
+  --brand-subtle: 21 42 61;
+  --on-brand: 6 19 31;
+
+  --safe-bg: 18 46 29;
+  --safe-border: 33 91 55;
+  --safe-fg: 95 217 138;
+  --safe-solid: 63 191 113;
+
+  --renal-bg: 51 42 12;
+  --renal-border: 91 74 20;
+  --renal-fg: 242 203 78;
+  --renal-solid: 224 180 41;
+
+  --interaction-bg: 58 35 15;
+  --interaction-border: 99 55 26;
+  --interaction-fg: 245 161 92;
+  --interaction-solid: 232 134 46;
+
+  --critical-bg: 58 20 20;
+  --critical-border: 92 31 31;
+  --critical-fg: 255 107 107;
+  --critical-solid: 232 67 61;
+
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-base font-sans text-primary antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
