@@ -18,7 +18,6 @@ function Toggle({ label, hint, on, onChange }: { label: string; hint: string; on
 }
 
 const THEMES: { id: ThemePref; label: string }[] = [
-  { id: 'system', label: 'النظام' },
   { id: 'light', label: 'فاتح' },
   { id: 'dark', label: 'داكن' },
 ]
@@ -26,7 +25,10 @@ const THEMES: { id: ThemePref; label: string }[] = [
 export default function Settings() {
   const navigate = useNavigate()
   const { nurse, signOut } = useSession()
-  const [theme, setTheme] = useState(getTheme())
+  // Until the nurse picks one, the theme follows the device; highlight whichever is showing.
+  const [theme, setTheme] = useState<ThemePref>(() =>
+    getTheme() !== 'system' ? getTheme() : document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+  )
   const [sound, setSoundState] = useState(getSound())
   const [demo, setDemoState] = useState(getDemo())
 
@@ -35,7 +37,7 @@ export default function Settings() {
       <div className="flex flex-col gap-4">
         <Card>
           <h2 className="mb-3 text-[13px] font-semibold text-secondary">المظهر</h2>
-          <div className="grid grid-cols-3 gap-1 rounded-md bg-surface-2 p-1" role="radiogroup" aria-label="المظهر">
+          <div className="grid grid-cols-2 gap-1 rounded-md bg-surface-2 p-1" role="radiogroup" aria-label="المظهر">
             {THEMES.map((t) => (
               <button
                 key={t.id}
@@ -75,9 +77,6 @@ export default function Settings() {
           تسجيل الخروج
         </Button>
 
-        <p className="text-center text-[12px] leading-5 text-tertiary">
-          MEDGUARD نموذج أولي للهاكاثون — البيانات تجريبية وليست لمرضى حقيقيين.
-        </p>
       </div>
     </Screen>
   )
