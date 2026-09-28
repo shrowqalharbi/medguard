@@ -22,7 +22,10 @@ Everything else is kept in a collapsed, ranked list under the result.
 1. **Clinical rules** (`src/engine/checks.ts`) — the safety floor. Deterministic.
 2. **Ranking model** (`src/engine/ranker.ts`) — logistic regression that predicts
    how likely a nurse is to dismiss a finding as noise, and orders the deferred
-   list. Learns from override reasons. Never changes the colour.
+   list. Learns from override reasons. Never changes the colour. Its per-kind
+   weights are trained by `scripts/train_ranker.py` from `docs/nurse-alert-survey.csv`
+   (`npm run train-ranker`); the current survey is placeholder data pending the
+   nursing team's real one — replace the CSV (same columns) and re-run.
 3. **Clinical-note analyzer** (`src/engine/noteAnalyzer.ts`) — reads free-text
    notes for reactions never entered in the allergy field (e.g. "rash after
    Augmentin"). Output is only accepted if the quoted evidence exists verbatim
