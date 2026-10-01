@@ -13,6 +13,8 @@ import Settings from './nurse/Settings'
 // The camera library is large: load it only when a scan screen opens.
 const ScanPatient = lazy(() => import('./nurse/ScanPatient'))
 const ScanDrug = lazy(() => import('./nurse/ScanDrug'))
+// Judging-table safety summary (iPad / laptop). Open, no nurse login.
+const Dashboard = lazy(() => import('./dashboard/Dashboard'))
 
 function RequireNurse({ children }: { children: ReactNode }) {
   const { nurse } = useSession()
@@ -33,6 +35,14 @@ function Routed() {
       <Route path="/patient" element={guard(<PatientProfile />)} />
       <Route path="/calculator" element={guard(<Calculator />)} />
       <Route path="/settings" element={guard(<Settings />)} />
+      <Route
+        path="/dashboard"
+        element={
+          <Suspense fallback={<div className="min-h-dvh bg-canvas" />}>
+            <Dashboard />
+          </Suspense>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
