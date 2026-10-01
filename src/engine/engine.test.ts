@@ -302,3 +302,23 @@ describe('GS1 barcode parsing', () => {
     expect(parseScan('1034567812')).toEqual({ type: 'code', value: '1034567812' })
   })
 })
+
+describe('payload sent to Claude carries no patient measurements', () => {
+  const forbidden = [/eGFR:/, /مل\/د/, /العمر/, /مرض كلى/, /مزمن/, /KKJH/, /السجل الصحي/]
+
+  it('for every demo pilgrim and drug', () => {
+    let checked = 0
+    for (const patient of patients) {
+      for (const drug of drugs) {
+        const d = on(patient, drug.id)
+        const payload = JSON.stringify(toRankPayload(rankable(d)))
+        for (const re of forbidden) expect(payload, `${patient.id}/${drug.id}`).not.toMatch(re)
+        for (const p of [patient.name, patient.recordNo, String(patient.egfr?.value ?? '@@')]) {
+          expect(payload, `${patient.id}/${drug.id}`).not.toContain(p)
+        }
+        checked++
+      }
+    }
+    expect(checked).toBeGreaterThan(20)
+  })
+})

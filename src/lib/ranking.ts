@@ -8,7 +8,7 @@ import { applyRanking, needsRanking, rankable, toRankPayload, type Decision } fr
  * order. If there is no network, no API key, a bad reply, or no answer
  * within TIMEOUT_MS, the fallback decision is returned unchanged.
  *
- * Only alert text is sent. No name, ID, age or record number.
+ * Only alert text is sent. No name, ID, age, record number or lab value (see toRankPayload).
  */
 
 export const TIMEOUT_MS = 2000

@@ -15,10 +15,13 @@ import type { Decision, Finding } from './types'
  *   3. The reply must contain exactly the alerts that were sent: no extra, no
  *      missing, no duplicates. Anything else is rejected and the fixed
  *      fallback order is kept.
- *   4. No patient identity is sent: only the alert text.
+ *   4. No patient identity and no patient measurement is sent. Kidney alerts go
+ *      out as fixed generic text (no eGFR value, no age, no condition). What
+ *      does leave the device: the alert kind, its severity band, and the name
+ *      of a current medicine when the alert is an interaction with it.
  */
 
-/** What is sent to Claude for one alert. No name, ID, age or record number. */
+/** What is sent to Claude for one alert. No name, ID, age, record number or lab value. */
 export interface RankAlert {
   id: string
   kind: Finding['kind']
@@ -40,13 +43,26 @@ export function rankable(d: Decision): Finding[] {
   return d.all.filter((f) => f.severity !== 'critical')
 }
 
+/**
+ * Kidney alerts normally carry the pilgrim's own numbers and reasons ("eGFR 38",
+ * "age 65 or more", "kidney disease on record"). Claude does not need them to
+ * order the alert, so these kinds are replaced by fixed generic text.
+ * Interaction and routine texts come from the drug tables, not from the patient.
+ */
+const GENERIC_DETAIL: Partial<Record<Finding['kind'], string>> = {
+  'renal-adjust': 'جرعة هذا الدواء تحتاج تعديلاً عند ضعف وظائف الكلى.',
+  'renal-avoid': 'هذا الدواء قد يضعف وظائف الكلى ويُفضّل تجنبه عند ضعفها.',
+  'renal-near-threshold': 'وظائف الكلى قريبة من الحد الذي تُعدَّل عنده جرعة هذا الدواء.',
+  'renal-unknown': 'جرعة هذا الدواء تعتمد على وظائف الكلى ولا توجد قراءة كلى حديثة.',
+}
+
 export function toRankPayload(findings: Finding[]): RankAlert[] {
   return findings.map(({ id, kind, severity, title, detail }) => ({
     id,
     kind,
     severity: severity as RankAlert['severity'],
     title,
-    detail,
+    detail: GENERIC_DETAIL[kind] ?? detail,
   }))
 }
 

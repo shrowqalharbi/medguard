@@ -51,7 +51,11 @@ all in code and all tested:
 - Critical findings are never sent and never reordered.
 - Claude orders alerts only inside their own severity band. The colour cannot change.
 - The reply must contain exactly the alerts that were sent, or it is rejected.
-- No name, ID, age or record number is sent: only alert text.
+- Nothing that identifies the pilgrim is sent, and no lab value: kidney alerts go
+  out as fixed generic text (no eGFR value, no age, no condition). What does leave
+  the device is the alert kind, its severity band, and the name of a current
+  medicine when the alert is an interaction with it. A test checks this for every
+  demo pilgrim and drug.
 - No reply within 2 seconds, offline, or no API key → fixed fallback order.
   The safety decision does not depend on the network.
 
@@ -59,12 +63,25 @@ Not AI, and not presented as AI: scanning, reading the record, the three checks.
 
 ## Offline
 
+A service worker (`sw/sw.template.js`, built into `dist/sw.js`) caches every built
+file after the first online visit, so the app opens, scans and runs the checks with
+no connection. Tested in a real browser: load once, cut the network, reload.
+
 | Part | Offline |
 |---|---|
-| App, scanning, the three checks, the colour | ✅ on the device |
-| Saudi / resident record | Only if fetched beforehand (e.g. preloaded for a camp) |
-| Indonesian KKJH data | Depends on whether the card QR carries the data or a link — not verified yet |
-| Claude ranking | ❌ → fixed fallback order |
+| App shell, scanning, the three checks, the colour | ✅ after one online visit |
+| Indonesian KKJH data | ✅ by design: the card's QR carries the IPS data itself (GovInsider), so no lookup is needed. The demo uses an invented `KKJH:<number>` payload; the real QR must be decoded as IPS |
+| Saudi / resident record | ⚠️ needs a read from the hospital system, or data preloaded for a camp. Not connected: the prototype uses demo data |
+| Claude ranking | ❌ → fixed fallback order. Never cached, never faked |
+
+## Data sources: what is verified and what is not
+
+| Claim | Status |
+|---|---|
+| KKJH card QR holds IPS data (allergies, medicines, history), readable without a special app | ✅ published (GovInsider) |
+| KKJH includes an eGFR | ❓ not stated in the source, so the app handles a missing eGFR explicitly |
+| Saudi hospital record readable by a third-party app through FHIR | ❓ not verified. Production design: a read-only FHIR query to the hospital's own system. The prototype uses demo data |
+| Wristband barcode carries the national ID / iqama | ✅ confirmed by the nursing team |
 
 ## Printable stage props
 
