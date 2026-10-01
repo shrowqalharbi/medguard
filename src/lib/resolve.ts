@@ -1,13 +1,13 @@
 import { parseScan, type Drug, type Patient, type ScannedPack } from '../engine'
-import { findDrugByGtin, findPatientByWristband, findPilgrim, parseHajjCard, type PilgrimRecord } from '../data'
+import { NATIONAL_ID, findByRecordNo, findDrugByGtin, parseKkjh } from '../data'
 
-/** Turns raw scanner text into a patient, a drug, or a clear reason why not. */
+/** Turns raw scanner text into a pilgrim, a drug, or a clear reason why not. */
 
 export type Resolved =
   | { kind: 'patient'; patient: Patient }
   | { kind: 'drug'; drug: Drug; pack?: ScannedPack }
-  /** A Hajj card QR. `pilgrim` is missing when the card is valid but not in the health registry. */
-  | { kind: 'pilgrim'; pilgrimId: string; pilgrim?: PilgrimRecord }
+  /** A valid ID or KKJH card with no record behind it. */
+  | { kind: 'no-record'; source: Patient['source']; recordNo: string }
   | { kind: 'unknown'; value: string }
 
 /** EAN-13 / UPC-A printed on some packs → GTIN-14 by left-padding. */
@@ -21,11 +21,17 @@ export function resolveScan(text: string): Resolved {
     return drug ? { kind: 'drug', drug, pack: scan.pack } : { kind: 'unknown', value: scan.pack.gtin ?? text }
   }
 
-  const pilgrimId = parseHajjCard(scan.value)
-  if (pilgrimId) return { kind: 'pilgrim', pilgrimId, pilgrim: findPilgrim(pilgrimId) }
+  // Indonesian Hajj health card (QR).
+  const kkjh = parseKkjh(scan.value)
+  if (kkjh) {
+    const patient = findByRecordNo(kkjh, 'kkjh')
+    return patient ? { kind: 'patient', patient } : { kind: 'no-record', source: 'kkjh', recordNo: kkjh }
+  }
 
-  const patient = findPatientByWristband(scan.value)
-  if (patient) return { kind: 'patient', patient }
+  // Any record number typed or printed bare (wristband, or the number on a KKJH card).
+  const byNo = findByRecordNo(scan.value)
+  if (byNo) return { kind: 'patient', patient: byNo }
+  if (NATIONAL_ID.test(scan.value)) return { kind: 'no-record', source: 'ehr', recordNo: scan.value }
 
   if (/^\d{8,14}$/.test(scan.value)) {
     const drug = findDrugByGtin(toGtin14(scan.value))

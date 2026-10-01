@@ -1,54 +1,70 @@
 # MEDGUARD
 
-**Scan. Verify. Administer Safer.** — bedside medication safety with AI alert triage.
+**Scan. Verify. Administer Safer.** — bedside medication safety for Hajj and Umrah emergency units.
 
-The nurse scans the patient's wristband and the medication. MEDGUARD runs every
-check at once and shows **one** signal instead of a stream of pop-ups:
+An app (PWA) on the nurse's own phone. The nurse scans the pilgrim's wristband
+or Hajj health card, then the medication. MEDGUARD runs three safety checks at
+once and shows **one** signal instead of a stream of pop-ups:
 
-| Signal | Meaning |
+| Signal | Meaning | What the nurse can do |
+|---|---|---|
+| 🔴 critical | Recorded allergy, kidney contraindication, expired pack | **Nothing to override.** Ask the doctor to change the drug. |
+| 🟠 warning | Major drug interaction, or any kidney alert (dose adjustment, avoid, eGFR missing) | Continue only with a reason, recorded in the audit trail |
+| 🟢 safe | Nothing worth interrupting for | Confirm and give |
+
+Everything else is kept in a collapsed list under the result.
+
+## Scope
+
+Hajj and Umrah only, for two groups whose data already exists electronically:
+
+| Pilgrims | Source | Standard | Scanned |
+|---|---|---|---|
+| Saudi citizens and residents | Electronic health record | HL7 FHIR | Wristband barcode (national ID / iqama) |
+| Indonesian pilgrims | Hajj health card KKJH | International Patient Summary (IPS, built on FHIR) | QR on the card (`KKJH:<number>`) |
+
+Only the **critical profile** is read, never the whole record:
+allergies (`AllergyIntolerance`), current medicines (`MedicationStatement`),
+chronic conditions (`Condition`), latest eGFR and blood type (`Observation`).
+
+## The three checks (rules, not AI)
+
+`src/engine/checks.ts` — deterministic and testable. They decide the colour.
+
+1. **Allergy** — by drug family (penicillin allergy blocks amoxicillin).
+2. **Interactions** — the new drug against the pilgrim's current medicines.
+3. **Dose vs. kidneys** — against the latest eGFR. With no eGFR on record the
+   app does not stop: it runs the other checks and shows
+   "⚠️ أظهرنا التعارضات المتاحة، قراءة الكلى مفقودة".
+
+## Where the AI is
+
+> The rules find the risk and decide the colour. Claude decides what is worth
+> interrupting the nurse for. Red never goes through Claude.
+
+**One AI role: alert ranking** (`src/engine/alertRanker.ts`, `api/rank-alerts.ts`,
+`src/lib/ranking.ts`). After the rules run, the non-critical alerts are sent to
+Claude (Haiku, via a Vercel server function so the key never reaches the phone).
+Claude returns them in order of importance with a one-line reason each. Guards,
+all in code and all tested:
+
+- Critical findings are never sent and never reordered.
+- Claude orders alerts only inside their own severity band. The colour cannot change.
+- The reply must contain exactly the alerts that were sent, or it is rejected.
+- No name, ID, age or record number is sent: only alert text.
+- No reply within 2 seconds, offline, or no API key → fixed fallback order.
+  The safety decision does not depend on the network.
+
+Not AI, and not presented as AI: scanning, reading the record, the three checks.
+
+## Offline
+
+| Part | Offline |
 |---|---|
-| 🔴 critical | Do not give: documented or AI-detected allergy, expired pack, renal contraindication |
-| 🟠 interaction | Major drug interaction: confirm with a reason |
-| 🟡 renal | Dose must be adjusted for kidney function (adjusted dose suggested) |
-| 🟢 safe | Nothing worth interrupting for |
-
-Everything else is kept in a collapsed, ranked list under the result.
-
-## How the AI fits in
-
-> The rules protect, our model ranks, and the language model catches what the rules miss.
-> AI can raise risk. It can never lower it.
-
-1. **Clinical rules** (`src/engine/checks.ts`) — the safety floor. Deterministic.
-2. **Ranking model** (`src/engine/ranker.ts`) — logistic regression that predicts
-   how likely a nurse is to dismiss a finding as noise, and orders the deferred
-   list. Learns from override reasons. Never changes the colour. Its per-kind
-   weights are trained by `scripts/train_ranker.py` from `docs/nurse-alert-survey.csv`
-   (`npm run train-ranker`); the current survey is placeholder data pending the
-   nursing team's real one — replace the CSV (same columns) and re-run.
-3. **Clinical-note analyzer** (`src/engine/noteAnalyzer.ts`) — reads free-text
-   notes for reactions never entered in the allergy field (e.g. "rash after
-   Augmentin"). Output is only accepted if the quoted evidence exists verbatim
-   in the record, and it can only add critical findings.
-
-All three guarantees are covered by tests in `src/engine/engine.test.ts`.
-
-## Hajj card (pilgrim with no wristband)
-
-During Hajj season many ER patients are pilgrims with no hospital record yet.
-Home → "مريض حاج بدون سوار" scans the QR on the Hajj card (`HAJJ:H-1447-208153`,
-or the number typed by hand) and reads what the pilgrim declared at
-registration: allergies, chronic conditions, current medicines, language and
-campaign contact. After the nurse confirms identity, the normal drug scan runs:
-
-- A card-declared allergy is **red**, like a documented one, until a doctor reviews it.
-- Card medicines feed the interaction check.
-- There is no eGFR yet, so it is never assumed normal. Kidney-dosed drugs turn
-  **yellow ("يحتاج تحليل كلى")** when the card declares kidney disease or the
-  patient is 65+, otherwise they are a deferred note.
-
-Demo registry: `src/data/pilgrims.json`. Scanning a card on the wristband screen
-also works.
+| App, scanning, the three checks, the colour | ✅ on the device |
+| Saudi / resident record | Only if fetched beforehand (e.g. preloaded for a camp) |
+| Indonesian KKJH data | Depends on whether the card QR carries the data or a link — not verified yet |
+| Claude ranking | ❌ → fixed fallback order |
 
 ## Printable stage props
 
@@ -56,10 +72,10 @@ also works.
 npm run labels   # → print/labels.html, open and print on A4 at 100% scale
 ```
 
-Wristbands (Code 128), Hajj cards (QR) and medicine pack labels (GS1 DataMatrix
-with expiry and batch, plus one expired backup pack), all generated from
-`src/data`. `scripts/labels.test.ts` decodes every printed code with the same
-ZXing library as the camera and checks it resolves to the right patient or drug.
+Wristbands (Code 128, national ID / iqama), Indonesian KKJH cards (QR) and
+medicine pack labels (GS1 DataMatrix with expiry and batch, plus one expired
+backup pack), all generated from `src/data`. `scripts/labels.test.ts` decodes
+every printed code with the same ZXing library as the camera.
 `print/medguard-labels.pdf` is a ready-to-print copy.
 
 ## Run it
@@ -67,7 +83,7 @@ ZXing library as the camera and checks it resolves to the right patient or drug.
 ```bash
 npm install
 npm run dev      # local dev server
-npm test         # engine test suite
+npm test         # engine + ranking + API test suite
 npm run build    # production build
 ```
 
@@ -77,13 +93,12 @@ Vercel deployment, not the local dev server.
 ## Project layout
 
 ```
-src/engine/      pure decision engine (no UI, no network)
-src/data/        demo data (JSON) — edited by the nursing team
-src/nurse/       nurse app screens (login, scan, Hajj card, result, profile, calculator, settings)
+src/engine/      pure decision engine + alert-ranking guards (no UI, no network)
+src/data/        demo pilgrims, drugs, interactions (JSON) — edited by the nursing team
+src/nurse/       app screens (login, scan, pilgrim card, drug scan, result, profile, calculator, settings)
+src/lib/         session, audit log, Claude ranking client, sound, preferences
+api/             Vercel server function: Claude alert ranking
 scripts/         printable labels generator + scan test
-src/components/  shared UI (buttons, cards, bottom sheet, camera scanner)
-src/lib/         session state, event log, note analyzer client, sound, preferences
-api/             Vercel serverless function for the language-model note analyzer
 docs/            data template for the nursing team
 ```
 
@@ -91,9 +106,7 @@ docs/            data template for the nursing team
 
 | Variable | Where | Purpose |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Vercel project settings | Enables the language-model note analyzer. Without it the app uses the offline matcher. |
-
-Only note text, date and author are sent to the analyzer — never names or record ids.
+| `ANTHROPIC_API_KEY` | Vercel project settings | Enables Claude alert ranking. Without it the app uses the fixed fallback order. |
 
 ## Stage backup
 
@@ -102,6 +115,6 @@ in case the camera or lighting fails during the live demo.
 
 ## Data disclaimer
 
-All patients and product codes are invented for the demo (GTIN prefix 628-999).
-Clinical rules must be reviewed and signed off by the nursing team. This is a
-hackathon prototype, not a medical device.
+All pilgrims, ID numbers and product codes are invented for the demo (GTIN
+prefix 628-999). Clinical rules must be reviewed and signed off by the nursing
+team. This is a hackathon prototype, not a medical device.

@@ -1,52 +1,73 @@
 [
   {
-    "id": "p-abdullah",
-    "wristband": "A-2291",
-    "name": "عبدالله بن محمد الحربي",
-    "age": 58,
-    "bloodType": "O+",
-    "room": "214",
-    "ward": "قسم الباطنة — الطابق 3",
+    "id": "p-fahad",
+    "source": "ehr",
+    "recordNo": "1034567812",
+    "name": "فهد بن سالم القحطاني",
+    "nationality": "سعودي",
+    "age": 66,
+    "bloodType": "A+",
+    "bed": "سرير 4",
+    "unit": "طوارئ منى",
     "allergies": [
-      { "family": "penicillin", "reaction": "صدمة تأقية (Anaphylaxis)", "recordedAt": "2024" }
+      { "family": "penicillin", "reaction": "صدمة تأقية (Anaphylaxis)", "recordedAt": "2023" }
     ],
     "currentMeds": ["warfarin"],
-    "egfr": { "value": 38, "measuredAt": "اليوم 6:40 ص", "source": "المختبر المركزي" },
-    "clinicalNotes": [
-      {
-        "date": "2024-03-11",
-        "author": "طوارئ",
-        "text": "دخول بصدمة تأقية بعد جرعة بنسلين، تم تسجيل الحساسية."
-      }
-    ]
+    "conditions": ["atrial-fibrillation", "hypertension"],
+    "egfr": { "value": 38, "measuredAt": "2026-05-10", "source": "السجل الصحي الإلكتروني" }
   },
   {
-    "id": "p-saad",
-    "wristband": "A-3107",
-    "name": "سعد بن فهد العتيبي",
-    "age": 64,
-    "bloodType": "A+",
-    "room": "216",
-    "ward": "قسم الباطنة — الطابق 3",
+    "id": "p-ahmed",
+    "source": "ehr",
+    "recordNo": "2456789013",
+    "name": "أحمد عبدالرحمن يوسف",
+    "nationality": "مقيم — مصر",
+    "age": 54,
+    "bloodType": "O+",
+    "bed": "سرير 7",
+    "unit": "طوارئ منى",
     "allergies": [],
     "currentMeds": ["amlodipine"],
-    "egfr": { "value": 72, "measuredAt": "أمس 7:15 ص", "source": "المختبر المركزي" },
-    "clinicalNotes": [
-      {
-        "date": "2023-05-02",
-        "author": "عيادة",
-        "text": "متابعة ضغط الدم، مستقر."
-      },
-      {
-        "date": "2022-11-19",
-        "author": "تمريض",
-        "text": "يفضّل الأدوية السائلة."
-      },
-      {
-        "date": "2021-08-07",
-        "author": "طوارئ",
-        "text": "راجع بطفح جلدي وحكة بعد أوجمنتين، وتم إيقافه."
-      }
-    ]
+    "conditions": ["ckd", "diabetes", "hypertension"],
+    "egfr": { "value": 24, "measuredAt": "2026-04-22", "source": "السجل الصحي الإلكتروني" }
+  },
+  {
+    "id": "p-siti",
+    "source": "kkjh",
+    "recordNo": "0100234567",
+    "name": "سيتي أمينة",
+    "nameLatin": "Siti Aminah",
+    "nationality": "إندونيسيا",
+    "language": "الإندونيسية",
+    "campaign": "بعثة حج إندونيسيا — القطاع 4",
+    "emergencyContact": "مرشد البعثة: 0559081142",
+    "age": 72,
+    "bloodType": "O+",
+    "bed": "سرير 11",
+    "unit": "طوارئ عرفات",
+    "allergies": [],
+    "currentMeds": ["warfarin"],
+    "conditions": ["atrial-fibrillation"]
+  },
+  {
+    "id": "p-budi",
+    "source": "kkjh",
+    "recordNo": "0100345678",
+    "name": "بودي سانتوسو",
+    "nameLatin": "Budi Santoso",
+    "nationality": "إندونيسيا",
+    "language": "الإندونيسية",
+    "campaign": "بعثة حج إندونيسيا — القطاع 2",
+    "emergencyContact": "مرشد البعثة: 0551234870",
+    "age": 61,
+    "bloodType": "B+",
+    "bed": "سرير 12",
+    "unit": "طوارئ عرفات",
+    "allergies": [
+      { "family": "nsaid", "reaction": "ضيق تنفس بعد الأسبرين", "recordedAt": "فحص ما قبل السفر 2026" }
+    ],
+    "currentMeds": ["metformin", "amlodipine"],
+    "conditions": ["diabetes", "hypertension"],
+    "egfr": { "value": 52, "measuredAt": "فحص ما قبل السفر 2026-04", "source": "بطاقة KKJH" }
   }
 ]

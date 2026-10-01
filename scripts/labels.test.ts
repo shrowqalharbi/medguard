@@ -35,17 +35,17 @@ async function decode(bcid: string, text: string): Promise<string> {
 }
 
 describe('printed labels scan correctly', () => {
-  for (const p of patients as { wristband: string; id: string }[]) {
-    it(`wristband ${p.wristband} → patient`, async () => {
-      const r = resolveScan(await decode('code128', p.wristband))
-      expect(r).toMatchObject({ kind: 'patient', patient: { id: p.id } })
+  for (const p of patients as { recordNo: string; id: string }[]) {
+    it(`wristband ${p.recordNo} → health record`, async () => {
+      const r = resolveScan(await decode('code128', p.recordNo))
+      expect(r).toMatchObject({ kind: 'patient', patient: { id: p.id, source: 'ehr' } })
     })
   }
 
-  for (const p of pilgrims as { pilgrimId: string }[]) {
-    it(`Hajj card ${p.pilgrimId} → pilgrim`, async () => {
-      const r = resolveScan(await decode('qrcode', hajjPayload(p.pilgrimId)))
-      expect(r).toMatchObject({ kind: 'pilgrim', pilgrimId: p.pilgrimId, pilgrim: { pilgrimId: p.pilgrimId } })
+  for (const p of pilgrims as { recordNo: string; id: string }[]) {
+    it(`KKJH card ${p.recordNo} → Indonesian pilgrim`, async () => {
+      const r = resolveScan(await decode('qrcode', hajjPayload(p.recordNo)))
+      expect(r).toMatchObject({ kind: 'patient', patient: { id: p.id, source: 'kkjh' } })
     })
   }
 

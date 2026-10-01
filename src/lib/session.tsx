@@ -1,8 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { evaluate, type Decision, type Drug, type Patient, type ScannedPack } from '../engine'
 import { drugs, interactions } from '../data'
-import { overrideLog } from './events'
-import { analyzeNotes, prefetchNotes } from './notes'
+import { rankWithClaude } from './ranking'
 import { getNurse, setNurse } from './prefs'
 
 /** Today's date for expiry checks, in local time. */
@@ -19,7 +18,11 @@ interface Session {
   drug: Drug | null
   pack: ScannedPack | undefined
   decision: Decision | null
-  /** Runs the full check for the current patient + a scanned drug. */
+  /**
+   * Runs the full check for the current pilgrim + a scanned drug.
+   * The rules decide the colour on the device; Claude then orders the
+   * non-critical alerts (2 s max, otherwise the fixed fallback order stays).
+   */
   check: (drug: Drug, pack?: ScannedPack) => Promise<Decision>
   clearDrug: () => void
 }
@@ -37,17 +40,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setPatientState(p)
     setDrug(null)
     setDecision(null)
-    if (p) prefetchNotes(p)
   }, [])
 
   const check = useCallback(
     async (d: Drug, pk?: ScannedPack) => {
       if (!patient) throw new Error('No patient selected')
-      const aiFindings = await analyzeNotes(patient, d)
-      const result = evaluate(
-        { patient, drug: d, pack: pk, aiFindings, today: today() },
-        { drugs, interactions, overrideLog: overrideLog() },
-      )
+      const ruled = evaluate({ patient, drug: d, pack: pk, today: today() }, { drugs, interactions })
+      const result = await rankWithClaude(ruled)
       setDrug(d)
       setPack(pk)
       setDecision(result)

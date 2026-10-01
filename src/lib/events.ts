@@ -1,9 +1,8 @@
-import type { FindingKind, Level } from '../engine'
-import type { OverrideEvent } from '../engine'
+import type { FindingKind, Level, RankedBy } from '../engine'
 
 /**
  * Administration log. Every scan decision and what the nurse did with it.
- * Feeds the supervisor dashboard and the ranking model's override history.
+ * The audit trail: every reason a nurse gave to continue past an orange alert.
  *
  * Storage: localStorage for the prototype (wrapped: private mode can throw),
  * BroadcastChannel so a dashboard tab on the same device updates live.
@@ -25,8 +24,8 @@ export interface AdminEvent {
   level: Level
   title: string
   deferredCount: number
-  /** Did the AI note analyzer contribute the decisive finding? */
-  aiDetected: boolean
+  /** Who ordered the non-critical alerts for this check. */
+  rankedBy: RankedBy
   outcome: Outcome
   overrideReason?: string
   overrideKind?: FindingKind
@@ -63,11 +62,4 @@ export function subscribe(fn: (e: AdminEvent) => void): () => void {
   const handler = (m: MessageEvent) => m.data?.type === 'event' && fn(m.data.event)
   channel.addEventListener('message', handler)
   return () => channel.removeEventListener('message', handler)
-}
-
-/** Override history in the shape the ranking model consumes. */
-export function overrideLog(): OverrideEvent[] {
-  return (memory ?? loadEvents())
-    .filter((e) => e.outcome === 'given-with-reason' && e.overrideKind)
-    .map((e) => ({ kind: e.overrideKind!, drugId: e.drugId, reason: e.overrideReason ?? '' }))
 }

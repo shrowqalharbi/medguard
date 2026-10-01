@@ -1,5 +1,6 @@
 /**
- * Printable stage props: patient wristbands, Hajj cards and medicine pack labels.
+ * Printable stage props: pilgrim wristbands (Saudi / resident health record),
+ * Indonesian KKJH Hajj health cards, and medicine pack labels.
  *
  *   npm run labels        → print/labels.html (open it and print at 100% scale)
  *
@@ -16,8 +17,11 @@ import { BRAND_COLORS as C, markSvg } from '../src/brand/mark.ts'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const load = (f) => JSON.parse(readFileSync(join(root, 'src/data', f), 'utf8'))
 const drugs = load('drugs.json')
-const patients = load('patients.json')
-const pilgrims = load('pilgrims.json')
+const all = load('patients.json')
+/** Saudi citizens and residents: wristband with the national ID / iqama number. */
+const patients = all.filter((p) => p.source === 'ehr')
+/** Indonesian pilgrims: KKJH card with a QR. */
+const pilgrims = all.filter((p) => p.source === 'kkjh')
 
 /** Packs to print, in the order of the stage script. */
 const PACKS = [
@@ -36,7 +40,7 @@ export const svg = (bcid, text, extra = {}) =>
   bwipjs.toSVG({ bcid, text, scale: 3, paddingwidth: 2, paddingheight: 2, ...extra })
 
 export const packPayload = (gtin, p) => `(01)${gtin}(17)${p.expiry}(10)${p.batch}`
-export const hajjPayload = (id) => `HAJJ:${id}`
+export const hajjPayload = (recordNo) => `KKJH:${recordNo}`
 
 const isoExpiry = (yymmdd) => `20${yymmdd.slice(0, 2)}-${yymmdd.slice(2, 4)}-${yymmdd.slice(4, 6)}`
 const logo = markSvg({ mark: C.blue, pulse: C.pulse, dot: C.dot })
@@ -48,30 +52,30 @@ function wristband(p) {
     : ''
   return `
   <div class="band">
-    <div class="band-code">${svg('code128', p.wristband, { height: 12, includetext: true, textsize: 9 })}</div>
+    <div class="band-code">${svg('code128', p.recordNo, { height: 12, includetext: true, textsize: 9 })}</div>
     <div class="band-info">
       <b>${esc(p.name)}</b>
-      <span>${p.age} سنة · فصيلة ${esc(p.bloodType ?? '—')} · غرفة ${esc(p.room)}</span>
-      <span>${esc(p.ward)}</span>
+      <span>${p.age} سنة · ${esc(p.nationality)} · فصيلة ${esc(p.bloodType ?? '—')}</span>
+      <span>${esc(p.unit)} · ${esc(p.bed)}</span>
       ${allergy}
     </div>
-    <div class="band-logo">${logo}<span>MEDGUARD</span><small>مستشفى تجريبي</small></div>
+    <div class="band-logo">${logo}<span>MEDGUARD</span><small>سوار تجريبي</small></div>
   </div>`
 }
 
 function hajjCard(p) {
   return `
   <div class="hcard">
-    <div class="hcard-head"><span>بطاقة الحاج — موسم 1447هـ</span><span class="mono">${p.pilgrimId}</span></div>
+    <div class="hcard-head"><span>Kartu Kesehatan Jemaah Haji — KKJH</span><span class="mono">${p.recordNo}</span></div>
     <div class="hcard-body">
       <div class="hcard-photo">صورة<br>الحاج</div>
       <div class="hcard-info">
         <b>${esc(p.name)}</b>
         <span dir="ltr" class="latin">${esc(p.nameLatin)}</span>
-        <span>${esc(p.nationality)} · ${p.age} سنة</span>
+        <span>${esc(p.nationality)} · ${p.age} سنة · ${esc(p.bloodType ?? '')}</span>
         <span class="small">${esc(p.campaign)}</span>
       </div>
-      <div class="hcard-qr">${svg('qrcode', hajjPayload(p.pilgrimId), { scale: 2, eclevel: 'M' })}</div>
+      <div class="hcard-qr">${svg('qrcode', hajjPayload(p.recordNo), { scale: 2, eclevel: 'M' })}</div>
     </div>
     <div class="hcard-foot">بطاقة تجريبية لعرض MEDGUARD — ليست وثيقة رسمية</div>
   </div>`
@@ -152,14 +156,14 @@ const html = `<!doctype html>
   <section class="page">
     <h1>MEDGUARD — دعائم العرض</h1>
     <p class="hint">اطبعي على A4 بمقياس 100% (بدون "ملاءمة للصفحة"). الرموز مطابقة لبيانات التطبيق في src/data. بيانات وهمية للعرض فقط.</p>
-    <h2>أساور المرضى (Code 128)</h2>
+    <h2>أساور الحجاج السعوديين والمقيمين — رقم الهوية/الإقامة (Code 128)</h2>
     ${patients.map(wristband).join('')}
-    <h2>بطاقات الحجاج (QR)</h2>
+    <h2>بطاقات الحجاج الإندونيسيين KKJH (QR)</h2>
     <div class="cards">${pilgrims.map(hajjCard).join('')}</div>
   </section>
   <section class="page">
     <h2>ملصقات عبوات الأدوية (GS1 DataMatrix)</h2>
-    <p class="hint">بالترتيب: باراسيتامول (أخضر) ← ميتفورمين (أصفر) ← إيبوبروفين (برتقالي) ← أموكسيسيللين (أحمر) ← أوجمنتين (سعد: اكتشاف الذكاء). العبوة المنتهية احتياطية.</p>
+    <p class="hint">مع فهد: باراسيتامول (أخضر) ← ميتفورمين (برتقالي: تعديل جرعة) ← إيبوبروفين (برتقالي: تنبيهان يرتبهما Claude) ← أموكسيسيللين (أحمر: حساسية). العبوة المنتهية احتياطية.</p>
     <div class="packs">${PACKS.map(packLabel).join('')}</div>
   </section>
 </body>

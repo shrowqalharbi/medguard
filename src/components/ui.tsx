@@ -69,13 +69,12 @@ export function Screen({
 
 /* ------------------------------------------------------------------ Button */
 
-type Tone = 'brand' | 'safe' | 'renal' | 'interaction' | 'critical'
+type Tone = 'brand' | 'safe' | 'warning' | 'critical'
 
 const SOLID: Record<Tone, string> = {
   brand: 'bg-brand text-brand-on',
   safe: 'bg-safe-solid text-white',
-  renal: 'bg-renal-solid text-white',
-  interaction: 'bg-interaction-solid text-white',
+  warning: 'bg-warning-solid text-white',
   critical: 'bg-critical-solid text-white',
 }
 

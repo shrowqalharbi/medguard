@@ -5,7 +5,7 @@ import { useSession } from '../lib/session'
 
 const RENAL_DRUGS = drugs.filter((d) => d.renal)
 
-type Verdict = { tone: 'safe' | 'renal' | 'critical'; title: string; dose: string; note: string }
+type Verdict = { tone: 'safe' | 'warning' | 'critical'; title: string; dose: string; note: string }
 
 function verdict(drugId: string, egfr: number): Verdict {
   const d = RENAL_DRUGS.find((x) => x.id === drugId)!
@@ -13,15 +13,15 @@ function verdict(drugId: string, egfr: number): Verdict {
   if (r.contraindicatedBelow !== undefined && egfr < r.contraindicatedBelow)
     return { tone: 'critical', title: 'لا يُعطى', dose: '—', note: `ممنوع عند eGFR أقل من ${r.contraindicatedBelow}.` }
   if (r.adjustBelow !== undefined && egfr < r.adjustBelow)
-    return { tone: 'renal', title: 'الجرعة المعدّلة', dose: r.adjustedDose!, note: `يُعدَّل عند eGFR أقل من ${r.adjustBelow}.` }
+    return { tone: 'warning', title: 'الجرعة المعدّلة', dose: r.adjustedDose!, note: `يُعدَّل عند eGFR أقل من ${r.adjustBelow}.` }
   if (r.avoidBelow !== undefined && egfr < r.avoidBelow)
-    return { tone: 'renal', title: 'يُفضّل تجنبه', dose: d.standardDose, note: r.avoidReason ?? '' }
+    return { tone: 'warning', title: 'يُفضّل تجنبه', dose: d.standardDose, note: r.avoidReason ?? '' }
   return { tone: 'safe', title: 'الجرعة القياسية', dose: d.standardDose, note: 'لا يلزم تعديل مع وظائف الكلى الحالية.' }
 }
 
 const TONE = {
   safe: 'bg-safe-bg text-safe-fg',
-  renal: 'bg-renal-bg text-renal-fg',
+  warning: 'bg-warning-bg text-warning-fg',
   critical: 'bg-critical-bg text-critical-fg',
 }
 

@@ -45,7 +45,7 @@ export default function Home() {
             <h1 className="text-lg font-semibold">
               {greeting()}، {nurse}
             </h1>
-            <p className="text-[13px] text-secondary">قسم الباطنة — الطابق 3</p>
+            <p className="text-[13px] text-secondary">طوارئ المشاعر — موسم الحج</p>
           </div>
           <Link to="/settings" aria-label="الإعدادات" className="grid h-10 w-10 place-items-center rounded-full bg-surface-2 text-secondary">
             <Icon name="settings" size={18} />
@@ -54,7 +54,7 @@ export default function Home() {
 
         <p className="flex items-center gap-2 rounded-md bg-safe-bg px-3 py-2.5 text-[12px] font-medium text-safe-fg">
           <Icon name="check" size={16} />
-          الجهاز جاهز — {todays.length} فحص اليوم{blocked ? `، أُوقف ${blocked} إعطاء خطر` : ''}
+          التطبيق جاهز — {todays.length} فحص اليوم{blocked ? `، أُوقف ${blocked} إعطاء خطر` : ''}
         </p>
 
         {patient && (
@@ -63,9 +63,9 @@ export default function Home() {
               <Icon name="user" size={20} />
             </span>
             <span className="flex-1">
-              <span className="block text-[12px] text-tertiary">المريض الحالي</span>
+              <span className="block text-[12px] text-tertiary">الحاج الحالي</span>
               <span className="block text-[15px] font-medium">
-                {patient.name} · {patient.hajj ? 'بطاقة حاج' : `غرفة ${patient.room}`}
+                {patient.name} · {patient.bed}
               </span>
             </span>
             <span className="text-[13px] font-medium text-brand">مسح دواء</span>
@@ -73,10 +73,9 @@ export default function Home() {
         )}
 
         <nav className="flex flex-col gap-3" aria-label="الإجراءات">
-          <Action to="/scan/patient" icon="scanBarcode" title="بدء فحص جديد" sub="امسحي سوار المريض ثم الدواء" primary />
-          <Action to="/patient" icon="clipboardList" title="ملف المريض" sub="الحساسيات، الملاحظات، وجرعات اليوم" />
+          <Action to="/scan/patient" icon="scanBarcode" title="بدء فحص جديد" sub="امسحي سوار الحاج أو بطاقته الصحية، ثم الدواء" primary />
+          <Action to="/patient" icon="clipboardList" title="ملف الحاج" sub="الحساسيات، الأدوية، الكلى، وجرعات اليوم" />
           <Action to="/calculator" icon="pill" title="حاسبة الجرعة الكلوية" sub="الجرعة المناسبة حسب eGFR" />
-          <Action to="/scan/hajj" icon="idCard" title="مريض حاج بدون سوار" sub="امسحي بطاقة الحاج لقراءة حساسياته وأدويته" />
         </nav>
       </div>
     </Screen>

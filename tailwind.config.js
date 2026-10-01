@@ -33,8 +33,7 @@ export default {
           on: token('on-brand'),
         },
         safe: status('safe'),
-        renal: status('renal'),
-        interaction: status('interaction'),
+        warning: status('warning'),
         critical: status('critical'),
         logo: {
           mark: token('logo-mark'),

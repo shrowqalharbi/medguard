@@ -1,8 +1,9 @@
 import type { Drug, Finding, InteractionRule, Patient, ScannedPack } from './types'
 
 /**
- * Deterministic clinical rules. These are the safety floor of the system:
- * nothing downstream (ranking model or AI) can remove what they find.
+ * Deterministic clinical rules on structured data. These decide the colour.
+ * Nothing downstream (including the AI alert ranker) can remove or lower
+ * what they find.
  */
 
 const FAMILY_LABEL_AR: Record<string, string> = {
@@ -18,23 +19,16 @@ export const familyLabel = (family: string) => FAMILY_LABEL_AR[family] ?? family
 const NEAR_THRESHOLD_MARGIN = 10
 
 export function checkAllergy(patient: Patient, drug: Drug): Finding[] {
+  const where = patient.source === 'kkjh' ? 'بطاقة الحاج الصحية (KKJH)' : 'السجل الصحي'
   return patient.allergies
     .filter((a) => drug.families.includes(a.family))
-    .map((a) => {
-      const card = a.source === 'hajj-card'
-      return {
-        id: `allergy:${a.family}`,
-        kind: 'allergy' as const,
-        severity: 'critical' as const,
-        source: 'rule' as const,
-        title: card
-          ? `حساسية مصرّح بها في بطاقة الحاج — ${familyLabel(a.family)}`
-          : `حساسية موثقة — ${familyLabel(a.family)}`,
-        detail: card
-          ? `${drug.nameAr} من عائلة ${familyLabel(a.family)}. صرّح الحاج في بطاقته بـ: ${a.reaction}. لم تُوثَّق بعد في ملف المستشفى، لكنها تمنع الإعطاء حتى يراجعها الطبيب.`
-          : `${drug.nameAr} من عائلة ${familyLabel(a.family)}. التفاعل المسجل: ${a.reaction}.`,
-      }
-    })
+    .map((a) => ({
+      id: `allergy:${a.family}`,
+      kind: 'allergy' as const,
+      severity: 'critical' as const,
+      title: `حساسية مسجلة — ${familyLabel(a.family)}`,
+      detail: `${drug.nameAr} من عائلة ${familyLabel(a.family)}. التفاعل المسجل في ${where}: ${a.reaction}.`,
+    }))
 }
 
 export function checkInteractions(
@@ -54,8 +48,7 @@ export function checkInteractions(
     findings.push({
       id: `interaction:${drug.id}:${med}`,
       kind: 'interaction',
-      severity: major ? 'interaction' : 'info',
-      source: 'rule',
+      severity: major ? 'warning' : 'info',
       title: major
         ? `تعارض دوائي مع ${drugName(med)}`
         : `تفاعل بسيط مع ${drugName(med)}`,
@@ -78,7 +71,6 @@ export function checkRenal(patient: Patient, drug: Drug): Finding[] {
         id: `renal:contraindicated:${drug.id}`,
         kind: 'renal-contraindicated',
         severity: 'critical',
-        source: 'rule',
         title: 'ممنوع مع وظائف الكلى الحالية',
         detail: `${drug.nameAr} لا يُعطى عند eGFR أقل من ${rule.contraindicatedBelow}. ${reading}.`,
       },
@@ -91,8 +83,7 @@ export function checkRenal(patient: Patient, drug: Drug): Finding[] {
     findings.push({
       id: `renal:avoid:${drug.id}`,
       kind: 'renal-avoid',
-      severity: 'renal',
-      source: 'rule',
+      severity: 'warning',
       title: 'يُفضّل تجنبه مع قصور الكلى',
       detail: `${rule.avoidReason ?? 'قد يضعف وظائف الكلى.'} ${reading}.`,
     })
@@ -103,8 +94,7 @@ export function checkRenal(patient: Patient, drug: Drug): Finding[] {
       findings.push({
         id: `renal:adjust:${drug.id}`,
         kind: 'renal-adjust',
-        severity: 'renal',
-        source: 'rule',
+        severity: 'warning',
         title: 'يتطلب تعديل الجرعة كلوياً',
         detail: `الجرعة الموصوفة ${drug.standardDose} ← المقترحة ${rule.adjustedDose}. ${reading}.`,
       })
@@ -113,7 +103,6 @@ export function checkRenal(patient: Patient, drug: Drug): Finding[] {
         id: `renal:near:${drug.id}`,
         kind: 'renal-near-threshold',
         severity: 'info',
-        source: 'rule',
         title: 'وظائف الكلى قريبة من حد التعديل',
         detail: `لا يلزم تعديل الآن (الحد ${rule.adjustBelow}). ${reading}.`,
       })
@@ -124,28 +113,21 @@ export function checkRenal(patient: Patient, drug: Drug): Finding[] {
 }
 
 /**
- * The drug's dose depends on kidney function but there is no eGFR yet.
- * It interrupts (yellow) only when there is a reason to suspect weak kidneys:
- * declared kidney disease or age 65+. Otherwise it is deferred, so a routine
- * ER patient does not trigger a yellow screen for every renally-cleared drug.
+ * The drug's dose depends on kidney function but there is no eGFR on record.
+ * It interrupts (orange) only when there is a reason to suspect weak kidneys:
+ * recorded kidney disease or age 65+. Otherwise it is deferred, so a routine
+ * pilgrim does not trigger an orange screen for every renally-cleared drug.
  */
 function renalUnknown(patient: Patient, drug: Drug): Finding {
-  const ckd = patient.conditions?.includes('ckd')
+  const ckd = patient.conditions.includes('ckd')
   const elderly = patient.age >= 65
-  const why = ckd
-    ? patient.hajj
-      ? 'بطاقة الحاج تذكر مرض كلى مزمن.'
-      : 'المريض لديه مرض كلى مزمن.'
-    : elderly
-      ? 'العمر 65 أو أكثر يرفع احتمال ضعف الكلى.'
-      : ''
+  const why = ckd ? 'الملف يذكر مرض كلى مزمن.' : elderly ? 'العمر 65 أو أكثر يرفع احتمال ضعف الكلى، خصوصاً مع حرارة المشاعر.' : ''
   return {
     id: `renal:unknown:${drug.id}`,
     kind: 'renal-unknown',
-    severity: ckd || elderly ? 'renal' : 'info',
-    source: 'rule',
-    title: 'لا يوجد تحليل كلى (eGFR)',
-    detail: `جرعة ${drug.nameAr} تعتمد على وظائف الكلى، ولا يوجد eGFR لهذا المريض. ${why} اطلبي تحليل كلى عاجل.`.replace(
+    severity: ckd || elderly ? 'warning' : 'info',
+    title: 'لا توجد قراءة كلى (eGFR)',
+    detail: `جرعة ${drug.nameAr} تعتمد على وظائف الكلى، ولا توجد قراءة eGFR في ملف الحاج. ${why} اطلبي تحليل كلى عاجل.`.replace(
       /\s+/g,
       ' ',
     ),
@@ -159,7 +141,6 @@ export function checkExpiry(pack: ScannedPack | undefined, today: string): Findi
       id: 'expired',
       kind: 'expired',
       severity: 'critical',
-      source: 'rule',
       title: 'العبوة منتهية الصلاحية',
       detail: `تاريخ الانتهاء المقروء من الباركود: ${pack.expiry}${pack.batch ? ` — التشغيلة ${pack.batch}` : ''}.`,
     },
@@ -171,7 +152,6 @@ export function routineNotes(drug: Drug): Finding[] {
     id: `routine:${drug.id}:${i}`,
     kind: 'routine' as const,
     severity: 'info' as const,
-    source: 'rule' as const,
     title: 'تذكير روتيني',
     detail: note,
   }))

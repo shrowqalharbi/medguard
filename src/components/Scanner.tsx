@@ -5,7 +5,7 @@ import { playScanTick } from '../lib/sound'
 
 /**
  * Live camera scanner. Reads the three symbologies the bedside flow uses:
- *   DataMatrix (GS1 medicine packs), Code 128 (wristbands), QR (Hajj card).
+ *   DataMatrix (GS1 medicine packs), Code 128 (wristbands), QR (Indonesian KKJH Hajj health card).
  * Restricting formats makes decoding faster and avoids false reads.
  */
 

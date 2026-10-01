@@ -29,15 +29,11 @@
   --safe-fg: 28 138 76;
   --safe-solid: 28 138 76;
 
-  --renal-bg: 255 247 222;
-  --renal-border: 243 221 139;
-  --renal-fg: 138 106 0;
-  --renal-solid: 200 154 0;
 
-  --interaction-bg: 255 238 224;
-  --interaction-border: 245 199 154;
-  --interaction-fg: 177 90 0;
-  --interaction-solid: 217 122 31;
+  --warning-bg: 255 238 224;
+  --warning-border: 245 199 154;
+  --warning-fg: 177 90 0;
+  --warning-solid: 217 122 31;
 
   --critical-bg: 253 234 234;
   --critical-border: 243 183 179;
@@ -77,15 +73,11 @@
   --safe-fg: 95 217 138;
   --safe-solid: 63 191 113;
 
-  --renal-bg: 51 42 12;
-  --renal-border: 91 74 20;
-  --renal-fg: 242 203 78;
-  --renal-solid: 224 180 41;
 
-  --interaction-bg: 58 35 15;
-  --interaction-border: 99 55 26;
-  --interaction-fg: 245 161 92;
-  --interaction-solid: 232 134 46;
+  --warning-bg: 58 35 15;
+  --warning-border: 99 55 26;
+  --warning-fg: 245 161 92;
+  --warning-solid: 232 134 46;
 
   --critical-bg: 58 20 20;
   --critical-border: 92 31 31;

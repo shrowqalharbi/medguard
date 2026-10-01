@@ -41,7 +41,7 @@ export default function ScanDrug() {
     if (r.kind === 'drug') return void run(r.drug, r.pack)
     setError(
       r.kind === 'patient'
-        ? 'هذا سوار مريض. امسحي الباركود الموجود على عبوة الدواء.'
+        ? 'هذا سوار أو بطاقة حاج. امسحي الباركود الموجود على عبوة الدواء.'
         : 'هذا الدواء غير موجود في صيدلية المستشفى. تأكدي من العبوة أو ابحثي بالاسم.',
     )
     setAttempt((n) => n + 1)
@@ -55,7 +55,7 @@ export default function ScanDrug() {
     <Screen
       dark
       title="مسح باركود الدواء"
-      back={patient.hajj ? '/scan/hajj' : '/scan/patient'}
+      back="/card"
       footer={
         <>
           {getDemo() && (
@@ -82,11 +82,9 @@ export default function ScanDrug() {
     >
       <div className="flex flex-1 flex-col items-center gap-4 pt-2">
         <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[12px]">
-          <Icon name={patient.hajj ? 'idCard' : 'user'} size={14} />
+          <Icon name="idCard" size={14} />
           <span className="truncate">
-            {patient.hajj
-              ? `${patient.name} — بطاقة حاج ${patient.hajj.pilgrimId} — ${patient.room}`
-              : `${patient.name} — سوار ${patient.wristband} — غرفة ${patient.room}`}
+            {patient.name} — {patient.source === 'kkjh' ? 'KKJH' : 'هوية'} {patient.recordNo} — {patient.bed}
           </span>
         </span>
 
