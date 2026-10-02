@@ -10,7 +10,6 @@ export function Screen({
   onBack,
   dark,
   footer,
-  trailing,
   children,
 }: {
   title?: string
@@ -20,7 +19,6 @@ export function Screen({
   /** Camera screens use a dark canvas regardless of theme. */
   dark?: boolean
   footer?: ReactNode
-  trailing?: ReactNode
   children: ReactNode
 }) {
   const navigate = useNavigate()
@@ -49,7 +47,6 @@ export function Screen({
             </button>
           )}
           <h1 className="flex-1 text-base font-semibold">{title}</h1>
-          {trailing}
         </header>
       )}
       <main className="flex flex-1 flex-col px-5 pb-4">{children}</main>

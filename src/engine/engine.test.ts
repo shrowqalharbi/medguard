@@ -16,7 +16,7 @@ const on = (patient: typeof fahad, drugId: string, extra = {}) =>
   evaluate({ patient, drug: drug(drugId), today: TODAY, ...extra }, ctx)
 
 describe('three colours only', () => {
-  it('every scenario lands on red, orange or green — never yellow', () => {
+  it('every scenario lands on red, orange or green', () => {
     for (const p of patients)
       for (const d of drugs) expect(['critical', 'warning', 'safe']).toContain(on(p, d.id).level)
   })
@@ -31,7 +31,7 @@ describe('Saudi pilgrim, health record (Fahad: penicillin allergy, warfarin, eGF
     expect(d.deferred.every((f) => f.severity === 'info')).toBe(true)
   })
 
-  it('metformin → orange (was yellow) with the suggested dose', () => {
+  it('metformin → orange with the suggested dose', () => {
     const d = on(fahad, 'metformin')
     expect(d.level).toBe('warning')
     expect(d.primary?.kind).toBe('renal-adjust')

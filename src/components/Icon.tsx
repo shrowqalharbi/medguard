@@ -1,12 +1,10 @@
 import type { SVGProps } from 'react'
-import { Activity, ClipboardList, FileHeart, IdCard, Pill, QrCode, ScanBarcode, type LucideIcon } from 'lucide-react'
+import { Activity, ClipboardList, IdCard, Pill, ScanBarcode, type LucideIcon } from 'lucide-react'
 
 /** Medical icons from lucide-react, rendered with the same size/stroke props as PATHS. */
 const LUCIDE = {
   scanBarcode: ScanBarcode,
-  qrCode: QrCode,
   clipboardList: ClipboardList,
-  fileHeart: FileHeart,
   pill: Pill,
   activity: Activity,
   idCard: IdCard,
@@ -20,12 +18,6 @@ const PATHS = {
     <>
       <path d="M20 21a8 8 0 0 0-16 0" />
       <circle cx="12" cy="7" r="4" />
-    </>
-  ),
-  calculator: (
-    <>
-      <rect x="4" y="2" width="16" height="20" rx="2" />
-      <path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01" />
     </>
   ),
   settings: (
@@ -64,18 +56,6 @@ const PATHS = {
       <path d="M4 12h16" />
     </>
   ),
-  wristband: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M8 10h8M8 14h5" />
-    </>
-  ),
-  nfc: (
-    <>
-      <path d="M6 8a8 8 0 0 1 0 8M9.5 10.5a4 4 0 0 1 0 3" />
-      <rect x="12" y="6" width="9" height="12" rx="2" />
-    </>
-  ),
   globe: (
     <>
       <circle cx="12" cy="12" r="10" />
@@ -101,12 +81,6 @@ const PATHS = {
       <path d="m16 17 5-5-5-5M21 12H9" />
     </>
   ),
-  camera: (
-    <>
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z" />
-      <circle cx="12" cy="13" r="4" />
-    </>
-  ),
   search: (
     <>
       <circle cx="11" cy="11" r="7" />
@@ -120,7 +94,6 @@ const PATHS = {
     </>
   ),
   moon: <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />,
-  x: <path d="M18 6 6 18M6 6l12 12" />,
   sparkle: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
 } as const
 

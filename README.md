@@ -1,137 +1,154 @@
 # MEDGUARD
 
-**Scan. Verify. Administer Safer.** — bedside medication safety for Hajj and Umrah emergency units.
+**Scan. Verify. Administer Safer.**
 
-An app (PWA) on the nurse's own phone. The nurse scans the pilgrim's wristband
-or Hajj health card, then the medication. MEDGUARD runs three safety checks at
-once and shows **one** signal instead of a stream of pop-ups:
+سلامة إعطاء الدواء عند سرير الحاج في طوارئ المشاعر.
 
-| Signal | Meaning | What the nurse can do |
+---
+
+## 1. المشكلة: إرهاق التنبيهات (Alert Fatigue)
+
+في طوارئ المشاعر تعطي الممرضة الدواء لحجاج كثيرين في وقت قصير، وكثير منهم كبار في السن ويأخذون أدوية مزمنة. أنظمة التحقق التقليدية تُظهر كل تنبيه في نافذة مستقلة: حساسية، تعارض، تذكير روتيني، ملاحظة جرعة. حين تكثر النوافذ تتعوّد الممرضة على إغلاقها بسرعة، فيضيع التنبيه الخطير بين التنبيهات العادية.
+
+## 2. الحل
+
+تطبيق ويب تقدّمي (**PWA**) يعمل على جوال الممرضة نفسه، **بدون أي جهاز إضافي**:
+
+1. **مسح الحاج**:
+   - السعوديون والمقيمون: باركود السوار (رقم الهوية أو الإقامة، Code 128).
+   - الحاج الإندونيسي: رمز QR في بطاقته الصحية **KKJH** (Kartu Kesehatan Jemaah Haji).
+2. **مسح الدواء**: باركود العبوة (GS1 DataMatrix: رقم المنتج، تاريخ الانتهاء، رقم التشغيلة).
+3. **فحص ثلاثي** في نفس اللحظة:
+   - **الحساسية**: حسب عائلة الدواء (مثلاً حساسية البنسلين تمنع أموكسيسيللين).
+   - **التعارضات**: الدواء الجديد مقابل أدوية الحاج الحالية.
+   - **الجرعة حسب الكلى**: مقابل آخر قراءة **eGFR**.
+
+النتيجة **إشارة واحدة**. وكل ما لا يستحق المقاطعة يُطوى في قائمة تحت النتيجة.
+
+يفحص التطبيق أيضاً صلاحية العبوة، ويتأكد أن العبوة المصروفة من الصيدلية تخص هذا الحاج.
+
+## 3. الإشارة الواحدة بثلاثة ألوان
+
+| الإشارة | المعنى | ماذا تفعل الممرضة |
 |---|---|---|
-| 🔴 critical | Recorded allergy, kidney contraindication, expired pack | **Nothing to override.** Ask the doctor to change the drug. |
-| 🟠 warning | Major drug interaction, or any kidney alert (dose adjustment, avoid, eGFR missing) | Continue only with a reason, recorded in the audit trail |
-| 🟢 safe | Nothing worth interrupting for | Confirm and give |
+| 🔴 **أحمر** | ممنوع الإعطاء نهائياً: حساسية مسجلة، أو منع كلوي، أو عبوة منتهية الصلاحية. يصاحبه صوت تنبيه. | **لا يوجد أي تجاوز.** الحل الوحيد أن يغيّر الطبيب الدواء. |
+| 🟠 **برتقالي** | خطر يحتاج قراراً: تعارض دوائي، أو تعديل جرعة كلوي، أو يحتاج قراءة كلى، أو تجنّب كلوي، أو **العبوة مصروفة لحاج آخر**. | لا يكمل إلا بسبب يُختار ويُسجَّل في سجل التدقيق، أو يلغي ويبلغ الطبيب. |
+| 🟢 **أخضر** | آمن. | تأكيد وإعطاء. بدون صوت. |
 
-Everything else is kept in a collapsed list under the result.
+**"ليس دواء هذا الحاج"**: إذا مُسحت عبوة صرفتها الصيدلية لحاج آخر، تظهر إشارة برتقالية. يظهر فيها اسم صاحب العبوة وسريره والطبيب الواصف، وزر "إرجاع العبوة للصيدلية". يُعرف صاحب العبوة من رقم التشغيلة المطبوع أصلاً على الباركود، فلا تحتاج العبوة أي ملصق جديد.
 
-## Scope
+## 4. دور الذكاء الاصطناعي: دور واحد فقط
 
-Hajj and Umrah only, for two groups whose data already exists electronically:
+> القواعد الطبية تجد الخطر وتحدد اللون. Claude يرتّب ما يستحق مقاطعة الممرضة. الأحمر لا يمر على Claude أبداً.
 
-| Pilgrims | Source | Standard | Scanned |
+**ترتيب التنبيهات غير الحرجة** بواسطة **Claude Haiku** (`claude-haiku-4-5-20251001`). يمر الطلب عبر دالة خادم على Vercel، فلا يصل مفتاح API إلى الجوال. يعيد Claude التنبيهات مرتبة حسب الأهمية، مع سبب قصير لكل واحد.
+
+ضمانات السلامة، وكلها في الكود ومغطاة بالاختبارات:
+
+- **الأحمر لا يُرسل إلى Claude** ولا يُعاد ترتيبه.
+- **Claude لا يغيّر اللون**: يرتّب داخل نفس درجة الخطورة فقط، فالبرتقالي يبقى فوق "للعلم فقط".
+- تنبيه "العبوة مصروفة لحاج آخر" يبقى أولاً دائماً، ولا يُرسل إلى Claude لأنه يحمل اسم حاج.
+- **لا يُرسل أي معرّف للحاج ولا أي قيمة تحاليل**: لا اسم، ولا رقم هوية، ولا عمر، ولا قراءة eGFR. تنبيهات الكلى تُرسل بنص عام ثابت. المُرسل فقط: نوع التنبيه، ودرجته، ونصه، واسم الدواء الحالي إذا كان التنبيه تعارضاً معه.
+- يجب أن يعيد Claude نفس التنبيهات المرسلة بالضبط، بلا زيادة ولا نقص ولا تكرار، وإلا يُرفض الرد.
+- **مهلة ثانيتين**: إذا لم يصل رد صالح خلالها، أو لم يُضبط المفتاح، يُستخدم **ترتيب احتياطي ثابت** حسب الخطورة. قرار السلامة لا يتغير في الحالتين.
+
+**ما ليس ذكاءً اصطناعياً** (ولا يُقدَّم على أنه كذلك): مسح الباركود وQR، وقراءة ملف الحاج، والفحص الثلاثي. كلها قواعد ثابتة وقابلة للاختبار في `src/engine/`.
+
+## 5. مصادر البيانات
+
+| الحجاج | المصدر | المعيار | طريقة القراءة |
 |---|---|---|---|
-| Saudi citizens and residents | Electronic health record | HL7 FHIR | Wristband barcode (national ID / iqama) |
-| Indonesian pilgrims | Hajj health card KKJH | International Patient Summary (IPS, built on FHIR) | QR on the card (`KKJH:<number>`) |
+| السعوديون والمقيمون | السجل الصحي الإلكتروني | **HL7 FHIR** | باركود السوار (رقم الهوية/الإقامة) |
+| الحجاج الإندونيسيون | بطاقة الحاج الصحية **KKJH** | **IPS** (International Patient Summary، مبني على FHIR) | رمز QR في البطاقة |
 
-Only the **critical profile** is read, never the whole record:
-allergies (`AllergyIntolerance`), current medicines (`MedicationStatement`),
-chronic conditions (`Condition`), latest eGFR and blood type (`Observation`).
+- **السجل الصحي (HL7 FHIR) مصمَّم للتكامل، وليس مربوطاً فعلياً** في هذا النموذج.
+- يُقرأ **الملف الحرج فقط**، لا الملف الكامل:
+  - الحساسيات (`AllergyIntolerance`)
+  - الأدوية الحالية (`MedicationStatement`)
+  - الأمراض المزمنة (`Condition`)
+  - آخر eGFR وفصيلة الدم (`Observation`)
+- إذا لم توجد قراءة eGFR، لا يتوقف التطبيق. يُكمل فحص الحساسية والتعارضات، ويوضح أن قراءة الكلى مفقودة. إذا كان الدواء يعتمد على الكلى والحاج عمره 65 أو أكثر أو مسجل له مرض كلى مزمن، تظهر إشارة برتقالية تطلب تحليل كلى.
 
-## The three checks (rules, not AI)
+> ⚠️ **كل البيانات في هذا النموذج تجريبية ووهمية:** الحجاج، أرقام الهوية، أرقام بطاقات KKJH، الأطباء، الوصفات، وأرقام المنتجات (GTIN بالبادئة 628-999). القواعد السريرية تحتاج مراجعة واعتماد الفريق التمريضي والصيدلي قبل أي استخدام فعلي.
 
-`src/engine/checks.ts` — deterministic and testable. They decide the colour.
-
-1. **Allergy** — by drug family (penicillin allergy blocks amoxicillin).
-2. **Interactions** — the new drug against the pilgrim's current medicines.
-3. **Dose vs. kidneys** — against the latest eGFR. With no eGFR on record the
-   app does not stop: it runs the other checks and shows
-   "⚠️ أظهرنا التعارضات المتاحة، قراءة الكلى مفقودة".
-
-## Where the AI is
-
-> The rules find the risk and decide the colour. Claude decides what is worth
-> interrupting the nurse for. Red never goes through Claude.
-
-**One AI role: alert ranking** (`src/engine/alertRanker.ts`, `api/rank-alerts.ts`,
-`src/lib/ranking.ts`). After the rules run, the non-critical alerts are sent to
-Claude (Haiku, via a Vercel server function so the key never reaches the phone).
-Claude returns them in order of importance with a one-line reason each. Guards,
-all in code and all tested:
-
-- Critical findings are never sent and never reordered.
-- Claude orders alerts only inside their own severity band. The colour cannot change.
-- The reply must contain exactly the alerts that were sent, or it is rejected.
-- Nothing that identifies the pilgrim is sent, and no lab value: kidney alerts go
-  out as fixed generic text (no eGFR value, no age, no condition). What does leave
-  the device is the alert kind, its severity band, and the name of a current
-  medicine when the alert is an interaction with it. A test checks this for every
-  demo pilgrim and drug.
-- No reply within 2 seconds, offline, or no API key → fixed fallback order.
-  The safety decision does not depend on the network.
-
-Not AI, and not presented as AI: scanning, reading the record, the three checks.
-
-## Offline
-
-A service worker (`sw/sw.template.js`, built into `dist/sw.js`) caches every built
-file after the first online visit, so the app opens, scans and runs the checks with
-no connection. Tested in a real browser: load once, cut the network, reload.
-
-| Part | Offline |
-|---|---|
-| App shell, scanning, the three checks, the colour | ✅ after one online visit |
-| Indonesian KKJH data | ✅ by design: the card's QR carries the IPS data itself (GovInsider), so no lookup is needed. The demo uses an invented `KKJH:<number>` payload; the real QR must be decoded as IPS |
-| Saudi / resident record | ⚠️ needs a read from the hospital system, or data preloaded for a camp. Not connected: the prototype uses demo data |
-| Claude ranking | ❌ → fixed fallback order. Never cached, never faked |
-
-## Data sources: what is verified and what is not
-
-| Claim | Status |
-|---|---|
-| KKJH card QR holds IPS data (allergies, medicines, history), readable without a special app | ✅ published (GovInsider) |
-| KKJH includes an eGFR | ❓ not stated in the source, so the app handles a missing eGFR explicitly |
-| Saudi hospital record readable by a third-party app through FHIR | ❓ not verified. Production design: a read-only FHIR query to the hospital's own system. The prototype uses demo data |
-| Wristband barcode carries the national ID / iqama | ✅ confirmed by the nursing team |
-
-## Printable stage props
-
-```bash
-npm run labels   # → print/labels.html, open and print on A4 at 100% scale
-```
-
-Wristbands (Code 128, national ID / iqama), Indonesian KKJH cards (QR) and
-medicine pack labels (GS1 DataMatrix with expiry and batch, plus one expired
-backup pack), all generated from `src/data`. `scripts/labels.test.ts` decodes
-every printed code with the same ZXing library as the camera.
-`print/medguard-labels.pdf` is a ready-to-print copy.
-
-## Run it
+## 6. التشغيل
 
 ```bash
 npm install
-npm run dev      # local dev server
-npm test         # engine + ranking + API test suite
-npm run build    # production build
+npm run dev      # خادم التطوير المحلي
+npm test         # الاختبارات: المحرك، الترتيب، دالة API، الملصقات المطبوعة، لوحة الملخص
+npm run build    # نسخة الإنتاج
 ```
 
-The camera only works over HTTPS, so test scanning on the phone through the
-Vercel deployment, not the local dev server.
+أوامر إضافية:
 
-## Project layout
-
-```
-src/engine/      pure decision engine + alert-ranking guards (no UI, no network)
-src/data/        demo pilgrims, drugs, interactions (JSON) — edited by the nursing team
-src/nurse/       app screens (login, scan, pilgrim card, drug scan, result, profile, calculator, settings)
-src/lib/         session, audit log, Claude ranking client, sound, preferences
-api/             Vercel server function: Claude alert ranking
-scripts/         printable labels generator + scan test
-docs/            data template for the nursing team
+```bash
+npm run lint     # فحص الكود (oxlint)
+npm run labels   # يولّد print/labels.html: الأساور، بطاقات KKJH، ملصقات العبوات
+npm run icons    # يولّد أيقونات التطبيق من شعار src/brand/mark.ts
 ```
 
-## Environment
+**متغير البيئة:**
 
-| Variable | Where | Purpose |
+| المتغير | المكان | الوظيفة |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Vercel project settings | Enables Claude alert ranking. Without it the app uses the fixed fallback order. |
+| `ANTHROPIC_API_KEY` | إعدادات مشروع Vercel | يفعّل ترتيب Claude. بدونه يعمل التطبيق بالترتيب الاحتياطي الثابت. |
 
-## Stage backup
+الكاميرا تحتاج رابطاً آمناً (HTTPS). لذلك جرّبي المسح على الجوال عبر النسخة المنشورة على Vercel، لا عبر خادم التطوير المحلي.
 
-Settings → "وضع العرض التجريبي" shows simulate-scan buttons on the scan screens,
-in case the camera or lighting fails during the live demo.
+## 7. سيناريو العرض
 
-## Data disclaimer
+الملصقات المطبوعة (`print/labels.html`) فيها:
+- سواران لفهد وأحمد.
+- بطاقتا KKJH لسيتي وبودي.
+- عبوات: باراسيتامول، ميتفورمين، إيبوبروفين، أموكسيسيللين، أوجمنتين (تشغيلة L2605)، وعبوة باراسيتامول منتهية احتياطية.
 
-All pilgrims, ID numbers and product codes are invented for the demo (GTIN
-prefix 628-999). Clinical rules must be reviewed and signed off by the nursing
-team. This is a hackathon prototype, not a medical device.
+| الحاج | الملف الحرج | الدواء | النتيجة المتوقعة |
+|---|---|---|---|
+| **فهد** — سعودي، 66 سنة (سجل صحي) | حساسية بنسلين، يأخذ وارفارين، eGFR 38 | باراسيتامول | 🟢 آمن، والملاحظات البسيطة مطوية |
+| | | ميتفورمين | 🟠 تعديل جرعة كلوي: 500 ملغ مرتين يومياً |
+| | | إيبوبروفين | 🟠 تعارض مع وارفارين + تجنّب كلوي (تنبيهان برتقاليان يرتبهما Claude) |
+| | | أموكسيسيللين | 🔴 حساسية مسجلة — البنسلين |
+| | | باراسيتامول (العبوة المنتهية) | 🔴 العبوة منتهية الصلاحية |
+| **أحمد** — مقيم، 54 سنة (سجل صحي) | مرض كلى مزمن، eGFR 24 | ميتفورمين | 🔴 ممنوع مع وظائف الكلى الحالية |
+| | | أموكسيسيللين | 🟠 تعديل جرعة كلوي: 500 ملغ كل 12 ساعة |
+| | | إيبوبروفين | 🟠 يُفضّل تجنبه مع قصور الكلى |
+| **سيتي** — إندونيسية، 72 سنة (KKJH) | تأخذ وارفارين، **لا توجد قراءة eGFR** | باراسيتامول | 🟢 آمن، مع تنبيه أن قراءة الكلى مفقودة |
+| | | ميتفورمين | 🟠 يحتاج قراءة كلى |
+| | | إيبوبروفين | 🟠 تعارض مع وارفارين + يحتاج قراءة كلى |
+| **بودي** — إندونيسي، 61 سنة (KKJH) | حساسية مضادات الالتهاب غير الستيرويدية، eGFR 52 من فحص ما قبل السفر | إيبوبروفين | 🔴 حساسية مسجلة في بطاقة KKJH |
+| | | باراسيتامول | 🟢 آمن (تُستخدم قراءة الكلى من البطاقة) |
+
+**بودي + عبوة أوجمنتين المطبوعة = 🟠 ليس دواء هذا الحاج.** العبوة (تشغيلة L2605) صرفتها الصيدلية لأحمد بوصفة د. ريم الشهري.
+
+هذه النتائج يُنتجها المحرك نفسه من بيانات `src/data/`، وتغطيها الاختبارات في `src/engine/engine.test.ts`.
+
+**احتياط العرض:** الإعدادات ← "وضع العرض التجريبي" يُظهر أزرار محاكاة المسح، إذا تعذّرت الكاميرا أو الإضاءة أثناء العرض.
+
+**لوحة الملخص** (`/dashboard`): صفحة لطاولة التحكيم تعرض ملخص أسبوع حج من سجل **افتراضي مولّد للعرض**. الحسابات حقيقية، لكن السجلات مولّدة.
+
+## 8. هيكل المشروع
+
+```
+src/engine/      محرك القرار: الفحص الثلاثي، الإشارة الواحدة، حمايات ترتيب Claude (بلا واجهة ولا شبكة)
+src/data/        البيانات التجريبية: الحجاج، الأدوية، التعارضات، وصفات الصيدلية (JSON)
+src/nurse/       شاشات الممرضة: الدخول، مسح الحاج، ملفه، مسح الدواء، النتيجة، الحاسبة الكلوية، الإعدادات
+src/dashboard/   لوحة ملخص الأمان لطاولة التحكيم
+src/lib/         الجلسة، سجل التدقيق، قراءة الباركود، طلب ترتيب Claude، الصوت، التفضيلات
+src/components/  عناصر الواجهة: الماسح، الأيقونات، الشعار
+src/brand/       رسم شعار MEDGUARD (مصدر واحد للتطبيق والأيقونات والملصقات)
+api/             دالة خادم Vercel لترتيب التنبيهات عبر Claude
+sw/              قالب Service Worker يُبنى إلى dist/sw.js
+scripts/         توليد الملصقات المطبوعة والأيقونات، واختبار قراءة الملصقات
+print/           الملصقات الجاهزة للطباعة
+docs/            نموذج مراجعة البيانات للفريق التمريضي
+```
+
+## 9. الخصوصية والأمان
+
+- **الحد الأدنى من البيانات**: يُقرأ الملف الحرج فقط (الحساسيات، الأدوية، الأمراض المزمنة، eGFR، فصيلة الدم)، لا الملف الطبي كاملاً.
+- **لا شيء يعرّف الحاج يذهب إلى Claude**: لا اسم، ولا رقم هوية، ولا عمر، ولا قيم تحاليل. اختبار آلي يتحقق من ذلك لكل حاج ودواء في البيانات التجريبية.
+- **مفتاح API على الخادم فقط** (متغير بيئة في Vercel)، ولا يصل إلى الجوال.
+- **القرار على الجوال**: الفحص الثلاثي واللون يُحسبان محلياً بقواعد ثابتة، ولا يعتمدان على رد Claude.
+- **سجل التدقيق**: كل نتيجة وكل سبب متابعة للبرتقالي يُسجَّل مع اسم الممرضة والوقت. يُحفظ حالياً في متصفح الجوال (localStorage)، ويُستبدل بخادم مشترك في التشغيل الفعلي.
+- **الأحمر بلا تجاوز**: لا يوجد في الواجهة أي زر يسمح بإعطاء دواء أحمر.

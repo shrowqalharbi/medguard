@@ -11,8 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "labels": "node scripts/make-labels.mjs",
-    "icons": "node scripts/make-icons.mjs",
-    "train-ranker": "python3 scripts/train_ranker.py"
+    "icons": "node scripts/make-icons.mjs"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",

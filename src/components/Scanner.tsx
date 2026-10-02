@@ -24,12 +24,10 @@ const MESSAGES: Record<Exclude<CameraState, 'starting' | 'live'>, string> = {
 
 export function Scanner({
   onResult,
-  paused,
   aspect = 'square',
   label,
 }: {
   onResult: (text: string) => void
-  paused?: boolean
   aspect?: 'square' | 'wide'
   /** Live status shown under the viewfinder, only while the camera is reading. */
   label: string
@@ -40,7 +38,6 @@ export function Scanner({
   const [state, setState] = useState<CameraState>('starting')
 
   useEffect(() => {
-    if (paused) return
     if (!window.isSecureContext) {
       setState('insecure')
       return
@@ -79,7 +76,7 @@ export function Scanner({
       done = true
       controls?.stop()
     }
-  }, [paused])
+  }, [])
 
   const box = aspect === 'square' ? 'aspect-square w-[72%]' : 'aspect-[14/9] w-[80%]'
 

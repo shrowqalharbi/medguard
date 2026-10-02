@@ -215,7 +215,7 @@ export default function Dashboard() {
             </div>
             <div className="mt-2 flex justify-between text-[13px]">
               <span>
-                <b className="text-brand">{s.ranking.claudePct}%</b> رتّبها Claude
+                <b className="text-brand">{s.ranking.claudePct}%</b> رتّبها الذكاء الاصطناعي
               </span>
               <span className="text-secondary">
                 <b>{100 - s.ranking.claudePct}%</b> ترتيب ثابت (بلا شبكة أو تأخر)

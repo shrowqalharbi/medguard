@@ -42,7 +42,7 @@ export default function ScanDrug() {
     setError(
       r.kind === 'patient'
         ? 'هذا سوار أو بطاقة حاج. امسحي الباركود الموجود على عبوة الدواء.'
-        : 'هذا الدواء غير موجود في صيدلية المستشفى. تأكدي من العبوة أو ابحثي بالاسم.',
+        : 'هذا الدواء غير موجود في صيدلية الطوارئ. تأكدي من العبوة أو ابحثي بالاسم.',
     )
     setAttempt((n) => n + 1)
   }
@@ -110,7 +110,7 @@ export default function ScanDrug() {
         ) : (
           <>
             <Scanner key={attempt} onResult={handle} aspect="wide" label="جارٍ البحث عن الباركود…" />
-                <p className="text-center text-[15px] font-medium">وجّهي الكاميرا نحو باركود عبوة الدواء</p>
+            <p className="text-center text-[15px] font-medium">وجّهي الكاميرا نحو باركود عبوة الدواء</p>
           </>
         )}
 
@@ -156,7 +156,7 @@ export default function ScanDrug() {
             ))}
             {results.length === 0 && (
               <li className="px-2 py-6 text-center text-[13px] text-secondary">
-                لا يوجد دواء بهذا الاسم في صيدلية المستشفى.
+                لا يوجد دواء بهذا الاسم في صيدلية الطوارئ.
               </li>
             )}
           </ul>

@@ -13,7 +13,7 @@ const LOOK: Record<Level, { box: string; fg: string; solid: string; icon: IconNa
   critical: { box: 'bg-critical-bg border-critical-border', fg: 'text-critical-fg', solid: 'bg-critical-solid', icon: 'stop', label: 'ممنوع الإعطاء' },
 }
 
-/** Orange covers drug interactions and every kidney alert (the old yellow). */
+/** Orange covers a pack dispensed for another pilgrim, drug interactions and every kidney alert. */
 const WARNING_LABEL: Partial<Record<FindingKind, { label: string; icon: IconName }>> = {
   'wrong-patient': { label: 'ليس دواء هذا الحاج', icon: 'user' },
   interaction: { label: 'تعارض دوائي', icon: 'alert' },
@@ -92,10 +92,8 @@ export default function Result() {
   const finish = (outcome: Outcome, text: string) => {
     recordEvent({
       nurse: nurse ?? 'ممرض',
-      device: 'MG-014',
       patientId: patient.id,
       patientName: patient.name,
-      room: patient.bed,
       drugId: drug.id,
       drugName: `${drug.nameAr} ${drug.strength}`,
       level: decision.level,
@@ -301,15 +299,8 @@ function Deferred({ decision, onOpen }: { decision: Decision; onOpen: (f: Findin
   return (
     <Card className="py-3">
       <div className="flex items-center justify-between">
-        {claude ? (
-          <AiBadge label="فرز Claude للتنبيهات" />
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[12px] font-medium text-secondary">
-            <Icon name="shield" size={12} />
-            ترتيب احتياطي ثابت
-          </span>
-        )}
-        <span className="text-[12px] text-tertiary">{n > 0 ? `أُجّلت ${n}` : `فُحص ${decision.all.length || 3} عناصر`}</span>
+        {claude && <AiBadge label="ترتيب ذكي للتنبيهات" />}
+        <span className="ms-auto text-[12px] text-tertiary">{n > 0 ? `أُجّلت ${n}` : `فُحص ${decision.all.length || 3} عناصر`}</span>
       </div>
       <p className="mt-2 text-[13px] leading-6 text-secondary">{decision.explanation}</p>
       {n > 0 && (
@@ -328,11 +319,11 @@ function Deferred({ decision, onOpen }: { decision: Decision; onOpen: (f: Findin
           ))}
         </ul>
       )}
-      <p className="mt-2 border-t border-line pt-2 text-[11px] leading-5 text-tertiary">
-        {claude
-          ? 'رتّب Claude التنبيهات غير الحرجة فقط. اللون تحدده القواعد الطبية، والأحمر لا يمر على Claude أبداً.'
-          : 'بدون اتصال أو عند تأخر الرد: ترتيب ثابت حسب الخطورة. قرار السلامة لا يتأثر.'}
-      </p>
+      {claude && (
+        <p className="mt-2 border-t border-line pt-2 text-[11px] leading-5 text-tertiary">
+          رُتّبت التنبيهات غير الحرجة بالذكاء الاصطناعي. اللون تحدده القواعد الطبية، والتنبيه الأحمر لا يمر على الذكاء الاصطناعي أبداً.
+        </p>
+      )}
     </Card>
   )
 }
@@ -355,7 +346,7 @@ function FindingDetail({ f, onClose }: { f: Finding; onClose: () => void }) {
       </div>
       <div className="rounded-md bg-surface-2 p-4 text-[13px] leading-6">
         <p>{f.detail}</p>
-        {f.rankReason && <p className="mt-2 text-tertiary">سبب الترتيب (Claude): {f.rankReason}</p>}
+        {f.rankReason && <p className="mt-2 text-tertiary">سبب الترتيب الذكي: {f.rankReason}</p>}
       </div>
       <Button variant="secondary" onClick={onClose}>
         تم الاطلاع

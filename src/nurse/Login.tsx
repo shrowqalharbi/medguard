@@ -81,7 +81,7 @@ export default function Login() {
         </form>
       </div>
       <p className="pb-8 text-center text-[12px] text-tertiary" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
-        مستشفى الملك عبدالله التخصصي — قسم الباطنة
+        طوارئ المشاعر — موسم الحج
       </p>
     </div>
   )

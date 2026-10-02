@@ -4,9 +4,8 @@ import type { FindingKind, Level, RankedBy } from '../engine'
  * Administration log. Every scan decision and what the nurse did with it.
  * The audit trail: every reason a nurse gave to continue past an orange alert.
  *
- * Storage: localStorage for the prototype (wrapped: private mode can throw),
- * BroadcastChannel so a dashboard tab on the same device updates live.
- * A shared backend replaces both when the team enables real-time sync.
+ * Storage: localStorage on the nurse's phone (wrapped: private mode can throw).
+ * A shared backend replaces it when the team enables real-time sync.
  */
 
 export type Outcome = 'given' | 'given-adjusted' | 'given-with-reason' | 'blocked' | 'escalated' | 'cancelled'
@@ -15,10 +14,8 @@ export interface AdminEvent {
   id: string
   at: string
   nurse: string
-  device: string
   patientId: string
   patientName: string
-  room: string
   drugId: string
   drugName: string
   level: Level
@@ -32,7 +29,6 @@ export interface AdminEvent {
 }
 
 const KEY = 'medguard.events.v1'
-const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('medguard') : null
 
 export function loadEvents(): AdminEvent[] {
   try {
@@ -53,13 +49,5 @@ export function recordEvent(e: Omit<AdminEvent, 'id' | 'at'>): AdminEvent {
   } catch {
     /* storage unavailable: keep in memory */
   }
-  channel?.postMessage({ type: 'event', event })
   return event
-}
-
-export function subscribe(fn: (e: AdminEvent) => void): () => void {
-  if (!channel) return () => {}
-  const handler = (m: MessageEvent) => m.data?.type === 'event' && fn(m.data.event)
-  channel.addEventListener('message', handler)
-  return () => channel.removeEventListener('message', handler)
 }

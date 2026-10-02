@@ -26,7 +26,7 @@ export default function PatientProfile() {
             <Icon name="user" size={26} />
           </span>
           <p className="text-[15px] font-medium">لم يُحدَّد حاج بعد</p>
-          <p className="max-w-[260px] text-[13px] leading-6 text-secondary">امسحي سوار الحاج أو بطاقته الصحية لعرض ملفه الحرج وجرعات اليوم.</p>
+          <p className="max-w-[260px] text-[13px] leading-6 text-secondary">امسحي سوار الحاج أو بطاقته الصحية لعرض ملفه الحرج وسجل الفحوصات.</p>
         </div>
       </Screen>
     )

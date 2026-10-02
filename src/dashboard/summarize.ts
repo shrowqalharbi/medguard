@@ -1,4 +1,4 @@
-import { DAYS, OVERRIDE_REASONS, type DemoCheck, type OrangeKind, type OrangeOutcome, type RedCause } from './demoLog'
+import { DAYS, OVERRIDE_REASONS, type DemoCheck, type OrangeOutcome, type RedCause } from './demoLog'
 
 const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) * 100) : 0)
 
@@ -42,7 +42,6 @@ export function summarize(log: DemoCheck[]) {
   const peakRed = byDay.reduce((a, b) => (b.critical > a.critical ? b : a))
 
   const redByCause = countBy<RedCause>(red, (c) => c.redCause, ['allergy', 'renal', 'expired'])
-  const orangeByKind = countBy<OrangeKind>(orange, (c) => c.orangeKind, ['interaction', 'renal-adjust', 'renal-unknown'])
   const orangeOutcome = countBy<OrangeOutcome>(orange, (c) => c.orangeOutcome, [
     'given-adjusted',
     'given-with-reason',
@@ -73,8 +72,6 @@ export function summarize(log: DemoCheck[]) {
 
   const rankable = log.filter((c) => c.rankable)
   const byClaude = rankable.filter((c) => c.rankedBy === 'claude').length
-  const peakDays = rankable.filter((c) => c.day === 1 || c.day === 2)
-  const otherDays = rankable.filter((c) => c.day !== 1 && c.day !== 2)
 
   return {
     total: log.length,
@@ -86,7 +83,6 @@ export function summarize(log: DemoCheck[]) {
     byDay,
     peakRed,
     redByCause,
-    orangeByKind,
     orangeOutcome,
     reasons,
     withReason,
@@ -98,8 +94,6 @@ export function summarize(log: DemoCheck[]) {
       claude: byClaude,
       fallback: rankable.length - byClaude,
       claudePct: pct(byClaude, rankable.length),
-      fallbackPeakPct: pct(peakDays.filter((c) => c.rankedBy === 'fallback').length, peakDays.length),
-      fallbackOtherPct: pct(otherDays.filter((c) => c.rankedBy === 'fallback').length, otherDays.length),
     },
     decisionSec: {
       safe: median(green.map((c) => c.decisionSec)),
