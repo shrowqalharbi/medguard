@@ -16,6 +16,9 @@ const hints = new Map<DecodeHintType, unknown>([
   [DecodeHintType.TRY_HARDER, true],
 ])
 
+/** How long the "code read" confirmation stays on screen, so the read is visible. */
+const READ_CONFIRM_MS = 900
+
 const MESSAGES: Record<Exclude<CameraState, 'starting' | 'live'>, string> = {
   denied: 'لم يُسمح باستخدام الكاميرا. فعّليها من إعدادات المتصفح، أو استخدمي الإدخال اليدوي بالأسفل.',
   unavailable: 'لم نجد كاميرا في هذا الجهاز. استخدمي الإدخال اليدوي بالأسفل.',
@@ -36,6 +39,8 @@ export function Scanner({
   const onResultRef = useRef(onResult)
   onResultRef.current = onResult
   const [state, setState] = useState<CameraState>('starting')
+  /** The code just read, shown briefly before the screen moves on. */
+  const [read, setRead] = useState<string | null>(null)
 
   useEffect(() => {
     if (!window.isSecureContext) {
@@ -49,7 +54,8 @@ export function Scanner({
 
     let controls: IScannerControls | undefined
     let done = false
-    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 40 })
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 120 })
 
     reader
       .decodeFromConstraints(
@@ -58,9 +64,14 @@ export function Scanner({
         (result) => {
           if (!result || done) return
           done = true
-          controls?.stop()
+          const text = result.getText()
           playScanTick()
-          onResultRef.current(result.getText())
+          setRead(text)
+          // Keep the camera image on screen with the confirmation, then move on.
+          timer = setTimeout(() => {
+            controls?.stop()
+            onResultRef.current(text)
+          }, READ_CONFIRM_MS)
         },
       )
       .then((c) => {
@@ -74,6 +85,7 @@ export function Scanner({
 
     return () => {
       done = true
+      clearTimeout(timer)
       controls?.stop()
     }
   }, [])
@@ -93,12 +105,23 @@ export function Scanner({
       <div className={`relative ${box}`} aria-hidden="true">
         {(['top-0 start-0 border-t-4 border-s-4 rounded-ss-md', 'top-0 end-0 border-t-4 border-e-4 rounded-se-md',
           'bottom-0 start-0 border-b-4 border-s-4 rounded-es-md', 'bottom-0 end-0 border-b-4 border-e-4 rounded-ee-md'] as const).map(
-          (pos) => <span key={pos} className={`absolute h-8 w-8 border-[#4FA3E8] ${pos}`} />,
+          (pos) => <span key={pos} className={`absolute h-8 w-8 transition-colors ${read ? 'border-[#3FBF7F]' : 'border-[#4FA3E8]'} ${pos}`} />,
         )}
-        {state === 'live' && (
+        {state === 'live' && !read && (
           <span className="absolute inset-x-0 h-[3px] rounded bg-[#4FA3E8] shadow-[0_0_14px_2px_rgba(79,163,232,.8)] [animation:scanline_2.4s_ease-in-out_infinite]" />
         )}
       </div>
+
+      {read && (
+        <div className="absolute inset-0 grid place-items-center bg-black/35" role="status">
+          <div className="flex flex-col items-center gap-1.5 rounded-lg bg-black/75 px-5 py-3 text-center text-white">
+            <span className="text-[15px] font-semibold text-[#3FBF7F]">✓ تمت قراءة الباركود</span>
+            <span dir="ltr" className="max-w-[240px] truncate font-mono text-[12px] text-white/75">
+              {read}
+            </span>
+          </div>
+        </div>
+      )}
 
       {state !== 'live' && state !== 'starting' && (
         <p className="absolute inset-x-6 bottom-6 rounded-md bg-black/70 p-3 text-center text-[13px] leading-6 text-white">
@@ -106,7 +129,7 @@ export function Scanner({
         </p>
       )}
     </div>
-    {state === 'live' && <ScanStatus label={label} />}
+    {state === 'live' && !read && <ScanStatus label={label} />}
     </>
   )
 }

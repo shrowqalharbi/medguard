@@ -10,6 +10,9 @@ import { resolveScan } from '../lib/resolve'
 import { useSession } from '../lib/session'
 import { unlockAudio } from '../lib/sound'
 
+/** Minimum time the "triple check" screen stays visible. */
+const CHECK_MIN_MS = 1000
+
 /** Demo shortcuts, in the order of the stage script. */
 const DEMO_ORDER = ['paracetamol', 'metformin', 'ibuprofen', 'amoxicillin']
 
@@ -27,7 +30,8 @@ export default function ScanDrug() {
   const run = async (drug: Drug, pack?: ScannedPack) => {
     setChecking(true)
     try {
-      await check(drug, pack)
+      // Keep "running the triple check" visible for a moment so the step is seen.
+      await Promise.all([check(drug, pack), new Promise((r) => setTimeout(r, CHECK_MIN_MS))])
       navigate('/result')
     } catch {
       setChecking(false)
