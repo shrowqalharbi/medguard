@@ -73,6 +73,18 @@ export default function Result() {
   const sounded = useRef(false)
   const reasonRef = useRef<HTMLElement>(null)
 
+  // Once the administration is recorded, the phone's back gesture/button goes
+  // straight home instead of stepping back through the alert and scan screens.
+  useEffect(() => {
+    if (!done) return
+    window.history.pushState(null, '', window.location.href)
+    const toHome = () => {
+      navigate('/home', { replace: true })
+    }
+    window.addEventListener('popstate', toHome)
+    return () => window.removeEventListener('popstate', toHome)
+  }, [done, navigate])
+
   useEffect(() => {
     if (decision?.level === 'critical' && !sounded.current) {
       sounded.current = true
@@ -113,7 +125,7 @@ export default function Result() {
       <Screen
         title=""
         back="/home"
-        onBack={() => (clearDrug(), navigate('/home'))}
+        onBack={() => navigate('/home', { replace: true })}
         footer={
           <>
             <Button onClick={() => (clearDrug(), navigate('/scan/drug'))} icon="pill">
