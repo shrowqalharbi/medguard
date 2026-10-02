@@ -15,6 +15,7 @@ const LOOK: Record<Level, { box: string; fg: string; solid: string; icon: IconNa
 
 /** Orange covers drug interactions and every kidney alert (the old yellow). */
 const WARNING_LABEL: Partial<Record<FindingKind, { label: string; icon: IconName }>> = {
+  'wrong-patient': { label: 'ليس دواء هذا الحاج', icon: 'user' },
   interaction: { label: 'تعارض دوائي', icon: 'alert' },
   'renal-adjust': { label: 'يتطلب تعديل الجرعة', icon: 'droplet' },
   'renal-avoid': { label: 'يُفضّل تجنبه — الكلى', icon: 'droplet' },
@@ -31,6 +32,7 @@ const ADJUSTED = 'إعطاء الجرعة المعدّلة المقترحة'
 
 /** Reasons a nurse can give to continue past an orange alert. Recorded in the audit trail. */
 const REASONS: Partial<Record<FindingKind, string[]>> = {
+  'wrong-patient': ['الطبيب وصف نفس الدواء لهذا الحاج', 'الصيدلية أكدت أن الملصق خطأ'],
   interaction: ['الطبيب على علم ووافق', 'يأخذه سابقاً دون مشاكل', 'جرعة لمرة واحدة', 'تمت مراقبة INR اليوم'],
   'renal-adjust': [ADJUSTED, 'الطبيب حدّد الجرعة', 'جرعة لمرة واحدة'],
   'renal-avoid': ['الطبيب على علم ووافق', 'لا يوجد بديل مناسب', 'جرعة لمرة واحدة'],
@@ -38,11 +40,17 @@ const REASONS: Partial<Record<FindingKind, string[]>> = {
 }
 
 /** One line per check, so the nurse sees all three were actually run. */
-function summary(d: Decision, source: 'ehr' | 'kkjh') {
+function summary(d: Decision, source: 'ehr' | 'kkjh', dispensed?: boolean) {
   const allergy = d.all.find((f) => f.kind === 'allergy')
   const interaction = d.all.find((f) => f.kind === 'interaction')
   const renal = d.all.find((f) => f.kind.startsWith('renal-'))
+  const wrong = d.all.find((f) => f.kind === 'wrong-patient')
+  const owner =
+    dispensed === undefined
+      ? []
+      : [{ label: 'صاحب العبوة', value: wrong ? 'حاج آخر ✗' : 'هذا الحاج ✓' }]
   return [
+    ...owner,
     {
       label: 'الحساسية الدوائية',
       value: allergy ? (source === 'kkjh' ? 'مسجلة في بطاقة KKJH' : 'مسجلة في السجل الصحي') : 'لا يوجد ✓',
@@ -57,7 +65,7 @@ function summary(d: Decision, source: 'ehr' | 'kkjh') {
 
 export default function Result() {
   const navigate = useNavigate()
-  const { patient, drug, decision, nurse, clearDrug, setPatient } = useSession()
+  const { patient, drug, pack, decision, nurse, clearDrug, setPatient } = useSession()
   const [reason, setReason] = useState<string | null>(null)
   const [reasonError, setReasonError] = useState(false)
   const [open, setOpen] = useState<Finding | null>(null)
@@ -79,6 +87,8 @@ export default function Result() {
   const look = warn ? { ...LOOK.warning, ...warn } : LOOK[decision.level]
   const reasons = (p && REASONS[p.kind]) ?? REASONS.interaction!
   const showDose = p?.kind === 'renal-adjust' && decision.adjustedDose
+  const doctor = patient.attendingDoctor
+  const wrongPatient = p?.kind === 'wrong-patient'
 
   const finish = (outcome: Outcome, text: string) => {
     recordEvent({
@@ -87,6 +97,7 @@ export default function Result() {
       patientId: patient.id,
       patientName: patient.name,
       room: patient.bed,
+      doctor,
       drugId: drug.id,
       drugName: `${drug.nameAr} ${drug.strength}`,
       level: decision.level,
@@ -160,11 +171,12 @@ export default function Result() {
               <p className="text-[12px] text-tertiary">
                 {patient.name} · {patient.source === 'kkjh' ? 'KKJH' : 'هوية'} {patient.recordNo}
               </p>
+              <p className="text-[12px] text-tertiary">الطبيب المعالج: {doctor}</p>
             </div>
             <Icon name="pill" size={20} className="text-tertiary" />
           </div>
           <div className="mt-2 border-t border-line pt-1.5">
-            {summary(decision, patient.source).map((r) => (
+            {summary(decision, patient.source, pack?.dispensedFor ? true : undefined).map((r) => (
               <Row key={r.label} label={r.label} value={r.value} />
             ))}
           </div>
@@ -187,7 +199,7 @@ export default function Result() {
         {decision.level === 'critical' && (
           <p className="flex items-start gap-2 rounded-md bg-critical-bg p-3 text-[13px] leading-6 text-critical-fg">
             <Icon name="stop" size={16} className="mt-1 shrink-0" />
-            أُوقف الإعطاء نهائياً، ولا يوجد تجاوز. الحل الوحيد أن يغيّر الطبيب الدواء، ثم تُمسح الوصفة الجديدة.
+            أُوقف الإعطاء نهائياً، ولا يوجد تجاوز. الحل الوحيد أن يغيّر {doctor} الدواء، ثم تُمسح الوصفة الجديدة.
           </p>
         )}
 
@@ -254,16 +266,25 @@ export default function Result() {
             >
               تأكيد المتابعة مع السبب
             </Button>
-            <Button variant="secondary" onClick={() => finish('escalated', p?.kind === 'renal-unknown' ? 'طُلب تحليل كلى وأُبلغ الطبيب' : 'أُلغي وأُبلغ الطبيب')}>
-              {p?.kind === 'renal-unknown' ? 'طلب تحليل كلى وإبلاغ الطبيب' : 'إلغاء وإبلاغ الطبيب'}
-            </Button>
+            {wrongPatient ? (
+              <Button variant="secondary" onClick={() => finish('cancelled', 'أُرجعت العبوة للصيدلية')}>
+                إرجاع العبوة للصيدلية
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => finish('escalated', p?.kind === 'renal-unknown' ? `طُلب تحليل كلى وأُبلغ ${doctor}` : `أُلغي وأُبلغ ${doctor}`)}
+              >
+                {p?.kind === 'renal-unknown' ? `طلب تحليل كلى وإبلاغ ${doctor}` : `إلغاء وإبلاغ ${doctor}`}
+              </Button>
+            )}
           </>
         )
       case 'critical':
         return (
           <>
-            <Button tone="critical" icon="bell" onClick={() => finish('escalated', 'أُبلغ الطبيب لتغيير الدواء')}>
-              إبلاغ الطبيب لتغيير الدواء
+            <Button tone="critical" icon="bell" onClick={() => finish('escalated', `أُبلغ ${doctor} لتغيير الدواء`)}>
+              إبلاغ {doctor} لتغيير الدواء
             </Button>
             <Button variant="secondary" onClick={() => finish('blocked', 'أُوقف الإعطاء')}>
               إيقاف والعودة

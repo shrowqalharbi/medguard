@@ -1,6 +1,7 @@
 [
   {
     "id": "p-fahad",
+    "attendingDoctor": "د. خالد الزهراني",
     "source": "ehr",
     "recordNo": "1034567812",
     "name": "فهد بن سالم القحطاني",
@@ -18,6 +19,7 @@
   },
   {
     "id": "p-ahmed",
+    "attendingDoctor": "د. ريم الشهري",
     "source": "ehr",
     "recordNo": "2456789013",
     "name": "أحمد عبدالرحمن يوسف",
@@ -33,6 +35,7 @@
   },
   {
     "id": "p-siti",
+    "attendingDoctor": "د. عبدالعزيز الغامدي",
     "source": "kkjh",
     "recordNo": "0100234567",
     "name": "سيتي أمينة",
@@ -51,6 +54,7 @@
   },
   {
     "id": "p-budi",
+    "attendingDoctor": "د. نورة المطيري",
     "source": "kkjh",
     "recordNo": "0100345678",
     "name": "بودي سانتوسو",

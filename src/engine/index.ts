@@ -1,4 +1,4 @@
-import { checkAllergy, checkExpiry, checkInteractions, checkRenal, routineNotes } from './checks'
+import { checkAllergy, checkDispensedFor, checkExpiry, checkInteractions, checkRenal, routineNotes } from './checks'
 import { triage } from './triage'
 import type { Decision, Drug, EngineInput, Finding, InteractionRule } from './types'
 
@@ -24,6 +24,7 @@ export function evaluate(input: EngineInput, ctx: EngineContext): Decision {
   const findings: Finding[] = [
     ...checkAllergy(patient, drug),
     ...checkExpiry(pack, today),
+    ...checkDispensedFor(patient, drug, pack),
     ...checkInteractions(patient, drug, ctx.interactions, nameOf),
     ...checkRenal(patient, drug),
     ...routineNotes(drug),

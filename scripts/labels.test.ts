@@ -16,7 +16,7 @@ import { PNG } from 'pngjs'
 import { describe, expect, it } from 'vitest'
 import { resolveScan } from '../src/lib/resolve'
 // @ts-expect-error plain JS module
-import { PACKS, drugs, hajjPayload, packPayload, patients, pilgrims } from './make-labels.mjs'
+import { PACKS, drugs, hajjPayload, orders, packPayload, patients, pilgrims, rxPayload } from './make-labels.mjs'
 
 const hints = new Map<DecodeHintType, unknown>([
   [DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.DATA_MATRIX, BarcodeFormat.CODE_128, BarcodeFormat.QR_CODE]],
@@ -58,6 +58,16 @@ describe('printed labels scan correctly', () => {
       expect(r.drug.id).toBe(pack.id)
       expect(r.pack?.batch).toBe(pack.batch)
       expect(r.pack?.expiry?.startsWith(`20${pack.expiry.slice(0, 2)}-${pack.expiry.slice(2, 4)}`)).toBe(true)
+    })
+  }
+
+  for (const o of orders as { orderNo: string; patientId: string; drugId: string }[]) {
+    it(`pharmacy label ${o.orderNo} → drug dispensed for ${o.patientId}`, async () => {
+      const r = resolveScan(await decode('code128', rxPayload(o.orderNo)))
+      expect(r.kind).toBe('drug')
+      if (r.kind !== 'drug') return
+      expect(r.drug.id).toBe(o.drugId)
+      expect(r.pack?.dispensedFor?.patientId).toBe(o.patientId)
     })
   }
 })

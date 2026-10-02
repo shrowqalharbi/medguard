@@ -32,6 +32,7 @@ export type FindingKind =
   | 'renal-avoid'
   | 'renal-unknown'
   | 'expired'
+  | 'wrong-patient'
   | 'routine'
 
 export interface Finding {
@@ -74,6 +75,8 @@ export interface Patient {
   /** Hajj campaign / mission sector. */
   campaign?: string
   emergencyContact?: string
+  /** Doctor in charge of the pilgrim here, who prescribes their medicines. */
+  attendingDoctor: string
   age: number
   bloodType?: string
   /** Where the pilgrim is being treated right now. */
@@ -130,6 +133,20 @@ export interface ScannedPack {
   expiry?: string // ISO date YYYY-MM-DD
   batch?: string
   serial?: string
+  /**
+   * Set when the barcode is a pharmacy label dispensed for ONE patient
+   * (not a plain stock pack). Read from the pharmacy order behind the label.
+   */
+  dispensedFor?: DispensedFor
+}
+
+export interface DispensedFor {
+  orderNo: string
+  patientId: string
+  patientName: string
+  bed: string
+  /** The prescribing (attending) doctor of the patient the pack belongs to. */
+  prescriber: string
 }
 
 export interface EngineInput {

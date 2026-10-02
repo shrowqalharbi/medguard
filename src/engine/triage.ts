@@ -17,6 +17,7 @@ export const FALLBACK_ORDER: FindingKind[] = [
   'allergy',
   'renal-contraindicated',
   'expired',
+  'wrong-patient',
   'interaction',
   'renal-adjust',
   'renal-unknown',
@@ -48,6 +49,8 @@ export function explain(primary: Finding | null, deferredCount: number): string 
     case 'expired':
     case 'renal-contraindicated':
       return 'منع مطلق: خطر على حياة الحاج، يتقدم على أي تنبيه آخر ولا يمكن تجاوزه.'
+    case 'wrong-patient':
+      return 'العبوة مصروفة لحاج آخر: لا تكملي إلا بعد التحقق وتوثيق السبب.'
     case 'renal-unknown':
       return 'الدواء يحتاج قراءة كلى لتحديد الجرعة، ولا توجد قراءة في ملف الحاج.'
     case 'interaction':

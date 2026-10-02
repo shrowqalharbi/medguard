@@ -38,9 +38,17 @@ export interface RankItem {
 
 const MAX_REASON = 160
 
-/** The alerts Claude is allowed to see: everything except critical findings. */
+/**
+ * Orange alerts that always come first and never go to Claude: a pack
+ * dispensed for another patient. Its text names that patient, and no ranking
+ * may push it below another alert.
+ */
+const PINNED: Finding['kind'][] = ['wrong-patient']
+const isPinned = (f: Finding) => PINNED.includes(f.kind)
+
+/** The alerts Claude is allowed to see: everything except critical and pinned findings. */
 export function rankable(d: Decision): Finding[] {
-  return d.all.filter((f) => f.severity !== 'critical')
+  return d.all.filter((f) => f.severity !== 'critical' && !isPinned(f))
 }
 
 /**
@@ -93,6 +101,7 @@ export function applyRanking(d: Decision, order: unknown): Decision | null {
 
   // Critical findings keep their rule order and are never touched.
   const critical = d.all.filter((f) => f.severity === 'critical')
+  const pinned = d.all.filter((f) => f.severity !== 'critical' && isPinned(f))
   const warning = pool.filter((f) => f.severity === 'warning').sort(byClaude).map(withReason)
   const info = pool.filter((f) => f.severity === 'info').sort(byClaude).map(withReason)
 
@@ -100,11 +109,12 @@ export function applyRanking(d: Decision, order: unknown): Decision | null {
   let deferred: Finding[]
   if (d.level === 'critical') {
     primary = d.primary
-    deferred = [...critical.filter((f) => f.id !== primary?.id), ...warning, ...info]
+    deferred = [...critical.filter((f) => f.id !== primary?.id), ...pinned, ...warning, ...info]
   } else if (d.level === 'warning') {
     // Same colour, but Claude picks which orange alert is shown first.
-    primary = warning[0]
-    deferred = [...warning.slice(1), ...info]
+    const orange = [...pinned, ...warning]
+    primary = orange[0]
+    deferred = [...orange.slice(1), ...info]
   } else {
     primary = null
     deferred = info

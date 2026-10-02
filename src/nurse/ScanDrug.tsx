@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Scanner } from '../components/Scanner'
 import { BottomSheet, Button, Screen } from '../components/ui'
-import { drugs } from '../data'
+import { drugs, orders, rxPayload } from '../data'
 import type { Drug, ScannedPack } from '../engine'
 import { getDemo } from '../lib/prefs'
 import { resolveScan } from '../lib/resolve'
@@ -72,6 +72,19 @@ export default function ScanDrug() {
                   </button>
                 )
               })}
+              {/* A pack the pharmacy dispensed for ANOTHER pilgrim (mixed-up packs). */}
+              {(() => {
+                const other = orders.find((o) => o.patientId !== patient.id)
+                if (!other) return null
+                return (
+                  <button
+                    onClick={() => (unlockAudio(), handle(rxPayload(other.orderNo)))}
+                    className="col-span-4 rounded-md border border-dashed border-white/25 px-1 py-2 text-[11px] text-white/70"
+                  >
+                    عبوة مصروفة لحاج آخر ({drugs.find((d) => d.id === other.drugId)?.nameAr})
+                  </button>
+                )
+              })()}
             </div>
           )}
           <Button variant="secondary" icon="search" onClick={() => (unlockAudio(), setSearch(true))}>

@@ -1,6 +1,7 @@
 import type { Drug, InteractionRule, Patient } from '../engine/types'
 import drugsJson from './drugs.json'
 import interactionsJson from './interactions.json'
+import ordersJson from './orders.json'
 import patientsJson from './patients.json'
 
 /**
@@ -19,6 +20,24 @@ import patientsJson from './patients.json'
 export const drugs = drugsJson as Drug[]
 export const interactions = interactionsJson as InteractionRule[]
 export const patients = patientsJson as Patient[]
+
+/** Pharmacy orders behind patient-specific labels (unit-dose packs dispensed for ONE patient). */
+export interface PharmacyOrder {
+  orderNo: string
+  patientId: string
+  drugId: string
+  dose: string
+  dispensedAt: string
+}
+export const orders = ordersJson as PharmacyOrder[]
+
+/** Pharmacy label barcode: "RX:<order number>". */
+export const rxPayload = (orderNo: string) => `RX:${orderNo}`
+export function parseRx(text: string): string | null {
+  const m = /^RX\s*[:|]\s*(RX-\d{4,10})$/i.exec(text.trim())
+  return m ? m[1].toUpperCase() : null
+}
+export const findOrder = (orderNo: string) => orders.find((o) => o.orderNo === orderNo)
 
 export const findDrugByGtin = (gtin: string) => drugs.find((d) => d.gtin === gtin)
 export const findDrugById = (id: string) => drugs.find((d) => d.id === id)

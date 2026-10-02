@@ -322,3 +322,53 @@ describe('payload sent to Claude carries no patient measurements', () => {
     expect(checked).toBeGreaterThan(20)
   })
 })
+
+describe('wrong patient: pack dispensed for another pilgrim', () => {
+  const rx = () => {
+    const r = resolveScan('RX:RX-260915') // paracetamol dispensed for Ahmed
+    if (r.kind !== 'drug') throw new Error('not a drug')
+    return r
+  }
+
+  it('scanned at Fahad\'s bedside → orange, names the real owner and prescriber', () => {
+    const { drug: d, pack } = rx()
+    const res = evaluate({ patient: fahad, drug: d, pack, today: TODAY }, ctx)
+    expect(res.level).toBe('warning')
+    expect(res.primary?.kind).toBe('wrong-patient')
+    expect(res.primary?.detail).toContain(ahmed.name)
+    expect(res.primary?.detail).toContain(ahmed.attendingDoctor)
+  })
+
+  it('scanned at the owner\'s bedside → no wrong-patient alert', () => {
+    const { drug: d, pack } = rx()
+    const res = evaluate({ patient: ahmed, drug: d, pack, today: TODAY }, ctx)
+    expect(res.all.some((f) => f.kind === 'wrong-patient')).toBe(false)
+  })
+
+  it('stays first and is never sent to Claude, even with other orange alerts', () => {
+    const r = resolveScan('RX:RX-260915')
+    if (r.kind !== 'drug') throw new Error('not a drug')
+    const ibu = drug('ibuprofen')
+    const res = evaluate({ patient: fahad, drug: ibu, pack: r.pack, today: TODAY }, ctx)
+    expect(res.primary?.kind).toBe('wrong-patient')
+    const pool = rankable(res)
+    expect(pool.some((f) => f.kind === 'wrong-patient')).toBe(false)
+    expect(JSON.stringify(toRankPayload(pool))).not.toContain(ahmed.name)
+    const reversed = pool.map((f) => ({ id: f.id, reason: 'x' })).reverse()
+    const ranked = applyRanking(res, reversed)!
+    expect(ranked.primary?.kind).toBe('wrong-patient')
+    expect(ranked.level).toBe('warning')
+  })
+
+  it('a red finding still wins over a wrong-patient pack', () => {
+    const r = resolveScan('RX:RX-260915')
+    if (r.kind !== 'drug') throw new Error('not a drug')
+    const res = evaluate({ patient: fahad, drug: drug('amoxicillin'), pack: r.pack, today: TODAY }, ctx)
+    expect(res.level).toBe('critical')
+    expect(res.deferred.map((f) => f.kind)).toContain('wrong-patient')
+  })
+
+  it('every pilgrim has an attending doctor', () => {
+    for (const p of patients) expect(p.attendingDoctor).toMatch(/^د\. /)
+  })
+})

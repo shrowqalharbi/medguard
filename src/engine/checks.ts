@@ -156,3 +156,22 @@ export function routineNotes(drug: Drug): Finding[] {
     detail: note,
   }))
 }
+
+/**
+ * Wrong-patient check (one of the five rights). A pharmacy label dispensed for
+ * another patient was scanned at this pilgrim's bedside: the packs got mixed.
+ * Orange: the nurse cannot continue without a documented reason.
+ */
+export function checkDispensedFor(patient: Patient, drug: Drug, pack: ScannedPack | undefined): Finding[] {
+  const owner = pack?.dispensedFor
+  if (!owner || owner.patientId === patient.id) return []
+  return [
+    {
+      id: `wrong-patient:${owner.orderNo}`,
+      kind: 'wrong-patient',
+      severity: 'warning',
+      title: 'العبوة مصروفة لحاج آخر',
+      detail: `عبوة ${drug.nameAr} هذه صرفتها الصيدلية للحاج ${owner.patientName} (${owner.bed}) بوصفة ${owner.prescriber}، طلب ${owner.orderNo}. يبدو أنها اختلطت بأدوية حاج آخر. أعيديها، ولا تعطي إلا عبوة مصروفة لهذا الحاج.`,
+    },
+  ]
+}

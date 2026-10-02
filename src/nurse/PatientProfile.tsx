@@ -50,6 +50,11 @@ export default function PatientProfile() {
           </div>
         </Card>
 
+        <Card className="py-2">
+          <Row label="الطبيب المعالج" value={patient.attendingDoctor} />
+          <Row label="الموقع" value={`${patient.unit} · ${patient.bed}`} />
+        </Card>
+
         <p className="flex items-start gap-2 rounded-md bg-brand-subtle p-3 text-[13px] leading-6 text-brand">
           <Icon name="idCard" size={18} className="mt-0.5 shrink-0" />
           المصدر: {SOURCE_AR[patient.source]}.{patient.language ? ` لغة الحاج: ${patient.language}.` : ''}

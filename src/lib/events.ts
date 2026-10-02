@@ -19,6 +19,8 @@ export interface AdminEvent {
   patientId: string
   patientName: string
   room: string
+  /** Attending doctor of the pilgrim at the time of the check. */
+  doctor?: string
   drugId: string
   drugName: string
   level: Level

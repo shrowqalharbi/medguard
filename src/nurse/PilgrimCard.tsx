@@ -58,6 +58,7 @@ export default function PilgrimCard() {
               <Row label="الجنسية" value={patient.nationality} />
               <Row label="العمر" value={`${patient.age} سنة`} />
               <Row label="الموقع" value={`${patient.unit} · ${patient.bed}`} />
+              <Row label="الطبيب المعالج" value={patient.attendingDoctor} />
               {patient.campaign && <Row label="البعثة" value={patient.campaign} />}
               {patient.emergencyContact && <Row label="للتواصل" value={patient.emergencyContact} />}
             </div>
