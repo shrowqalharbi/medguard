@@ -55,7 +55,7 @@ export function Scanner({
     let controls: IScannerControls | undefined
     let done = false
     let timer: ReturnType<typeof setTimeout> | undefined
-    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 120 })
+    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 300 })
 
     reader
       .decodeFromConstraints(
