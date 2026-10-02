@@ -111,6 +111,9 @@ export default function Result() {
     const positive = done.outcome.startsWith('given')
     return (
       <Screen
+        title=""
+        back="/home"
+        onBack={() => (clearDrug(), navigate('/home'))}
         footer={
           <>
             <Button onClick={() => (clearDrug(), navigate('/scan/drug'))} icon="pill">
