@@ -17,8 +17,6 @@ import { BRAND_COLORS as C, markSvg } from '../src/brand/mark.ts'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const load = (f) => JSON.parse(readFileSync(join(root, 'src/data', f), 'utf8'))
 const drugs = load('drugs.json')
-/** Pharmacy labels dispensed for ONE patient (barcode "RX:<order>"). */
-const orders = load('orders.json')
 const all = load('patients.json')
 /** Saudi citizens and residents: wristband with the national ID / iqama number. */
 const patients = all.filter((p) => p.source === 'ehr')
@@ -43,7 +41,6 @@ export const svg = (bcid, text, extra = {}) =>
 
 export const packPayload = (gtin, p) => `(01)${gtin}(17)${p.expiry}(10)${p.batch}`
 export const hajjPayload = (recordNo) => `KKJH:${recordNo}`
-export const rxPayload = (orderNo) => `RX:${orderNo}`
 
 const isoExpiry = (yymmdd) => `20${yymmdd.slice(0, 2)}-${yymmdd.slice(2, 4)}-${yymmdd.slice(4, 6)}`
 const logo = markSvg({ mark: C.blue, pulse: C.pulse, dot: C.dot })
@@ -102,25 +99,6 @@ function packLabel(p) {
   </div>`
 }
 
-function rxLabel(o) {
-  const d = drugs.find((x) => x.id === o.drugId)
-  const p = all.find((x) => x.id === o.patientId)
-  return `
-  <div class="pack rx">
-    <div class="pack-info">
-      <span class="small">صيدلية المستشفى — مصروف لمريض واحد</span>
-      <b>${esc(d.nameAr)} ${esc(o.dose)}</b>
-      <span>للحاج: <b class="who">${esc(p.name)}</b></span>
-      <span class="small">${esc(p.unit)} · ${esc(p.bed)} · ${esc(p.attendingDoctor)}</span>
-      <span class="small">طلب ${o.orderNo} · ${esc(o.dispensedAt)}</span>
-    </div>
-    <div class="pack-code">
-      ${svg('code128', rxPayload(o.orderNo), { height: 10 })}
-      <span dir="ltr" class="hri">${o.orderNo}</span>
-    </div>
-  </div>`
-}
-
 const html = `<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -167,10 +145,6 @@ const html = `<!doctype html>
   .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
   .pack { display: flex; gap: 3mm; align-items: center; height: 42mm; border: 1px solid #9AA4B2; border-radius: 2mm; padding: 3mm 4mm; }
   .pack.expired { border: 1.5px solid #C62828; }
-  .pack.rx { border: 1.5px dashed #0B5FA5; }
-  .pack.rx { grid-column: span 2; }
-  .pack.rx .pack-code { width: 60mm; }
-  .who { font-size: 10pt; }
   .pack-info { flex: 1; display: flex; flex-direction: column; line-height: 1.4; }
   .pack-info b { font-size: 13pt; }
   .strength { font-weight: 600; }
@@ -191,9 +165,6 @@ const html = `<!doctype html>
     <h2>ملصقات عبوات الأدوية (GS1 DataMatrix)</h2>
     <p class="hint">مع فهد: باراسيتامول (أخضر) ← ميتفورمين (برتقالي: تعديل جرعة) ← إيبوبروفين (برتقالي: تنبيهان يرتبهما Claude) ← أموكسيسيللين (أحمر: حساسية). العبوة المنتهية احتياطية.</p>
     <div class="packs">${PACKS.map(packLabel).join('')}</div>
-    <h2>ملصق صيدلية مصروف لحاج آخر (Code 128)</h2>
-    <p class="hint">امسحيه مع فهد: برتقالي "ليس دواء هذا الحاج" — العبوة صُرفت لأحمد واختلطت بأدوية فهد.</p>
-    <div class="packs">${orders.map(rxLabel).join('')}</div>
   </section>
 </body>
 </html>`
@@ -205,4 +176,4 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   console.log(`wrote ${out}`)
 }
 
-export { PACKS, drugs, orders, patients, pilgrims }
+export { PACKS, drugs, patients, pilgrims }

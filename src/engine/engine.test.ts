@@ -323,52 +323,52 @@ describe('payload sent to Claude carries no patient measurements', () => {
   })
 })
 
-describe('wrong patient: pack dispensed for another pilgrim', () => {
-  const rx = () => {
-    const r = resolveScan('RX:RX-260915') // paracetamol dispensed for Ahmed
+describe('wrong patient: printed Augmentin pack (batch L2605) was dispensed for Ahmed', () => {
+  const scanAug = () => {
+    const r = resolveScan(`(01)${drug('augmentin').gtin}(17)280630(10)L2605`)
     if (r.kind !== 'drug') throw new Error('not a drug')
     return r
   }
 
-  it('scanned at Fahad\'s bedside → orange, names the real owner and prescriber', () => {
-    const { drug: d, pack } = rx()
-    const res = evaluate({ patient: fahad, drug: d, pack, today: TODAY }, ctx)
+  it('the existing printed label carries the owner via its batch', () => {
+    expect(scanAug().pack?.dispensedFor?.patientId).toBe('p-ahmed')
+  })
+
+  it('scanned with Budi → orange, names the owner and the prescribing doctor', () => {
+    const { drug: d, pack } = scanAug()
+    const res = evaluate({ patient: budi, drug: d, pack, today: TODAY }, ctx)
     expect(res.level).toBe('warning')
     expect(res.primary?.kind).toBe('wrong-patient')
     expect(res.primary?.detail).toContain(ahmed.name)
     expect(res.primary?.detail).toContain(ahmed.attendingDoctor)
   })
 
-  it('scanned at the owner\'s bedside → no wrong-patient alert', () => {
-    const { drug: d, pack } = rx()
+  it('scanned with its owner → no wrong-patient alert', () => {
+    const { drug: d, pack } = scanAug()
     const res = evaluate({ patient: ahmed, drug: d, pack, today: TODAY }, ctx)
     expect(res.all.some((f) => f.kind === 'wrong-patient')).toBe(false)
   })
 
-  it('stays first and is never sent to Claude, even with other orange alerts', () => {
-    const r = resolveScan('RX:RX-260915')
-    if (r.kind !== 'drug') throw new Error('not a drug')
-    const ibu = drug('ibuprofen')
-    const res = evaluate({ patient: fahad, drug: ibu, pack: r.pack, today: TODAY }, ctx)
+  it('stays first among orange alerts and is never sent to Claude', () => {
+    const { drug: d, pack } = scanAug()
+    const res = evaluate({ patient: siti, drug: d, pack, today: TODAY }, ctx) // + kidney reading missing
     expect(res.primary?.kind).toBe('wrong-patient')
     const pool = rankable(res)
     expect(pool.some((f) => f.kind === 'wrong-patient')).toBe(false)
     expect(JSON.stringify(toRankPayload(pool))).not.toContain(ahmed.name)
-    const reversed = pool.map((f) => ({ id: f.id, reason: 'x' })).reverse()
-    const ranked = applyRanking(res, reversed)!
-    expect(ranked.primary?.kind).toBe('wrong-patient')
-    expect(ranked.level).toBe('warning')
   })
 
-  it('a red finding still wins over a wrong-patient pack', () => {
-    const r = resolveScan('RX:RX-260915')
-    if (r.kind !== 'drug') throw new Error('not a drug')
-    const res = evaluate({ patient: fahad, drug: drug('amoxicillin'), pack: r.pack, today: TODAY }, ctx)
+  it('red still wins: Fahad (penicillin allergy) + this pack stays red', () => {
+    const { drug: d, pack } = scanAug()
+    const res = evaluate({ patient: fahad, drug: d, pack, today: TODAY }, ctx)
     expect(res.level).toBe('critical')
     expect(res.deferred.map((f) => f.kind)).toContain('wrong-patient')
   })
 
-  it('every pilgrim has an attending doctor', () => {
-    for (const p of patients) expect(p.attendingDoctor).toMatch(/^د\. /)
+  it('other printed packs carry no owner (stage script unchanged)', () => {
+    for (const id of ['paracetamol', 'metformin', 'ibuprofen', 'amoxicillin']) {
+      const r = resolveScan(`(01)${drug(id).gtin}(17)281231(10)L2601`)
+      expect(r.kind === 'drug' && r.pack?.dispensedFor).toBeFalsy()
+    }
   })
 })

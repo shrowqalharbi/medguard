@@ -1,9 +1,10 @@
 [
   {
     "orderNo": "RX-260915",
+    "batch": "L2605",
+    "drugId": "augmentin",
     "patientId": "p-ahmed",
-    "drugId": "paracetamol",
-    "dose": "500 ملغ",
+    "dose": "625 ملغ",
     "dispensedAt": "2026-10-02 14:10"
   }
 ]

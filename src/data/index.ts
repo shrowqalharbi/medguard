@@ -21,9 +21,15 @@ export const drugs = drugsJson as Drug[]
 export const interactions = interactionsJson as InteractionRule[]
 export const patients = patientsJson as Patient[]
 
-/** Pharmacy orders behind patient-specific labels (unit-dose packs dispensed for ONE patient). */
+/**
+ * Pharmacy dispensing records: a pack (identified by its GS1 batch) that the
+ * pharmacy dispensed for ONE patient. Nothing new is printed on the pack: the
+ * app looks the batch up after scanning the existing GS1 DataMatrix.
+ * Demo: the printed Augmentin pack (batch L2605) was dispensed for Ahmed.
+ */
 export interface PharmacyOrder {
   orderNo: string
+  batch: string
   patientId: string
   drugId: string
   dose: string
@@ -31,13 +37,8 @@ export interface PharmacyOrder {
 }
 export const orders = ordersJson as PharmacyOrder[]
 
-/** Pharmacy label barcode: "RX:<order number>". */
-export const rxPayload = (orderNo: string) => `RX:${orderNo}`
-export function parseRx(text: string): string | null {
-  const m = /^RX\s*[:|]\s*(RX-\d{4,10})$/i.exec(text.trim())
-  return m ? m[1].toUpperCase() : null
-}
-export const findOrder = (orderNo: string) => orders.find((o) => o.orderNo === orderNo)
+export const findOrderByPack = (drugId: string, batch?: string) =>
+  batch ? orders.find((o) => o.drugId === drugId && o.batch === batch) : undefined
 
 export const findDrugByGtin = (gtin: string) => drugs.find((d) => d.gtin === gtin)
 export const findDrugById = (id: string) => drugs.find((d) => d.id === id)

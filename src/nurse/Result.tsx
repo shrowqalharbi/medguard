@@ -87,7 +87,6 @@ export default function Result() {
   const look = warn ? { ...LOOK.warning, ...warn } : LOOK[decision.level]
   const reasons = (p && REASONS[p.kind]) ?? REASONS.interaction!
   const showDose = p?.kind === 'renal-adjust' && decision.adjustedDose
-  const doctor = patient.attendingDoctor
   const wrongPatient = p?.kind === 'wrong-patient'
 
   const finish = (outcome: Outcome, text: string) => {
@@ -97,7 +96,6 @@ export default function Result() {
       patientId: patient.id,
       patientName: patient.name,
       room: patient.bed,
-      doctor,
       drugId: drug.id,
       drugName: `${drug.nameAr} ${drug.strength}`,
       level: decision.level,
@@ -171,7 +169,6 @@ export default function Result() {
               <p className="text-[12px] text-tertiary">
                 {patient.name} · {patient.source === 'kkjh' ? 'KKJH' : 'هوية'} {patient.recordNo}
               </p>
-              <p className="text-[12px] text-tertiary">الطبيب المعالج: {doctor}</p>
             </div>
             <Icon name="pill" size={20} className="text-tertiary" />
           </div>
@@ -187,6 +184,12 @@ export default function Result() {
           <Card>
             <h3 className="mb-1 text-[13px] font-semibold text-secondary">السبب</h3>
             <p className="text-[15px] leading-7">{p.detail}</p>
+            {wrongPatient && pack?.dispensedFor && (
+              <div className="mt-3 border-t border-line pt-2">
+                <Row label="صاحب العبوة" value={`${pack.dispensedFor.patientName} · ${pack.dispensedFor.bed}`} />
+                <Row label="الطبيب الواصف" value={<span className="font-semibold">{pack.dispensedFor.prescriber}</span>} />
+              </div>
+            )}
             {showDose && (
               <div className="mt-3 border-t border-line pt-2">
                 <Row label="الجرعة الموصوفة" value={<s className="text-tertiary">{drug.standardDose}</s>} />
@@ -199,7 +202,7 @@ export default function Result() {
         {decision.level === 'critical' && (
           <p className="flex items-start gap-2 rounded-md bg-critical-bg p-3 text-[13px] leading-6 text-critical-fg">
             <Icon name="stop" size={16} className="mt-1 shrink-0" />
-            أُوقف الإعطاء نهائياً، ولا يوجد تجاوز. الحل الوحيد أن يغيّر {doctor} الدواء، ثم تُمسح الوصفة الجديدة.
+            أُوقف الإعطاء نهائياً، ولا يوجد تجاوز. الحل الوحيد أن يغيّر الطبيب الدواء، ثم تُمسح الوصفة الجديدة.
           </p>
         )}
 
@@ -271,11 +274,8 @@ export default function Result() {
                 إرجاع العبوة للصيدلية
               </Button>
             ) : (
-              <Button
-                variant="secondary"
-                onClick={() => finish('escalated', p?.kind === 'renal-unknown' ? `طُلب تحليل كلى وأُبلغ ${doctor}` : `أُلغي وأُبلغ ${doctor}`)}
-              >
-                {p?.kind === 'renal-unknown' ? `طلب تحليل كلى وإبلاغ ${doctor}` : `إلغاء وإبلاغ ${doctor}`}
+              <Button variant="secondary" onClick={() => finish('escalated', p?.kind === 'renal-unknown' ? 'طُلب تحليل كلى وأُبلغ الطبيب' : 'أُلغي وأُبلغ الطبيب')}>
+                {p?.kind === 'renal-unknown' ? 'طلب تحليل كلى وإبلاغ الطبيب' : 'إلغاء وإبلاغ الطبيب'}
               </Button>
             )}
           </>
@@ -283,8 +283,8 @@ export default function Result() {
       case 'critical':
         return (
           <>
-            <Button tone="critical" icon="bell" onClick={() => finish('escalated', `أُبلغ ${doctor} لتغيير الدواء`)}>
-              إبلاغ {doctor} لتغيير الدواء
+            <Button tone="critical" icon="bell" onClick={() => finish('escalated', 'أُبلغ الطبيب لتغيير الدواء')}>
+              إبلاغ الطبيب لتغيير الدواء
             </Button>
             <Button variant="secondary" onClick={() => finish('blocked', 'أُوقف الإعطاء')}>
               إيقاف والعودة

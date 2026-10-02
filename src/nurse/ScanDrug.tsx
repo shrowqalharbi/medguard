@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Scanner } from '../components/Scanner'
 import { BottomSheet, Button, Screen } from '../components/ui'
-import { drugs, orders, rxPayload } from '../data'
+import { drugs, orders } from '../data'
 import type { Drug, ScannedPack } from '../engine'
 import { getDemo } from '../lib/prefs'
 import { resolveScan } from '../lib/resolve'
@@ -78,7 +78,7 @@ export default function ScanDrug() {
                 if (!other) return null
                 return (
                   <button
-                    onClick={() => (unlockAudio(), handle(rxPayload(other.orderNo)))}
+                    onClick={() => (unlockAudio(), handle(`(01)${drugs.find((d) => d.id === other.drugId)!.gtin}(17)280630(10)${other.batch}`))}
                     className="col-span-4 rounded-md border border-dashed border-white/25 px-1 py-2 text-[11px] text-white/70"
                   >
                     عبوة مصروفة لحاج آخر ({drugs.find((d) => d.id === other.drugId)?.nameAr})

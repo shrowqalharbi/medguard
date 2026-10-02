@@ -1,5 +1,5 @@
 import { parseScan, type Drug, type Patient, type ScannedPack } from '../engine'
-import { NATIONAL_ID, findByRecordNo, findDrugByGtin, findDrugById, findOrder, parseKkjh, parseRx, patients } from '../data'
+import { NATIONAL_ID, findByRecordNo, findDrugByGtin, findOrderByPack, parseKkjh, patients } from '../data'
 
 /** Turns raw scanner text into a pilgrim, a drug, or a clear reason why not. */
 
@@ -18,30 +18,23 @@ export function resolveScan(text: string): Resolved {
 
   if (scan.type === 'gs1') {
     const drug = scan.pack.gtin ? findDrugByGtin(scan.pack.gtin) : undefined
-    return drug ? { kind: 'drug', drug, pack: scan.pack } : { kind: 'unknown', value: scan.pack.gtin ?? text }
-  }
-
-  // Pharmacy label dispensed for one patient: drug + who it belongs to.
-  const rx = parseRx(scan.value)
-  if (rx) {
-    const order = findOrder(rx)
-    const drug = order && findDrugById(order.drugId)
+    if (!drug) return { kind: 'unknown', value: scan.pack.gtin ?? text }
+    // Was this pack dispensed by the pharmacy for one specific patient?
+    const order = findOrderByPack(drug.id, scan.pack.batch)
     const owner = order && patients.find((p) => p.id === order.patientId)
-    if (!order || !drug || !owner) return { kind: 'unknown', value: rx }
-    return {
-      kind: 'drug',
-      drug,
-      pack: {
-        gtin: drug.gtin,
-        dispensedFor: {
-          orderNo: order.orderNo,
-          patientId: owner.id,
-          patientName: owner.name,
-          bed: owner.bed,
-          prescriber: owner.attendingDoctor,
-        },
-      },
-    }
+    const pack = owner
+      ? {
+          ...scan.pack,
+          dispensedFor: {
+            orderNo: order.orderNo,
+            patientId: owner.id,
+            patientName: owner.name,
+            bed: owner.bed,
+            prescriber: owner.attendingDoctor,
+          },
+        }
+      : scan.pack
+    return { kind: 'drug', drug, pack }
   }
 
   // Indonesian Hajj health card (QR).
